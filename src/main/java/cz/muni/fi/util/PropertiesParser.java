@@ -15,9 +15,9 @@ public class PropertiesParser {
      *
      * @return java.util.Properties parsed properties
      */
-    public Properties getSparkProperties() {
+    public static Properties getSparkProperties() {
         Properties prop = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("spark.properties")) {
+        try (InputStream input = PropertiesParser.class.getClassLoader().getResourceAsStream("spark.properties")) {
             prop.load(input);
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -30,9 +30,9 @@ public class PropertiesParser {
      *
      * @return java.util.Properties parsed properties
      */
-    public Properties getKafkaProperties() {
+    public static Properties getKafkaProperties() {
         Properties prop = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("kafka.properties")) {
+        try (InputStream input = PropertiesParser.class.getClassLoader().getResourceAsStream("kafka.properties")) {
             prop.load(input);
         } catch (IOException ex) {
             ex.printStackTrace();

@@ -8,9 +8,9 @@ import java.util.Properties;
 /**
  * Created by filip on 23.5.15.
  */
-public class ConfigurationProducer {
+public class SparkConfProducer {
     public static SparkConf getSparkConf() {
-        final Properties sparkProps = new PropertiesParser().getSparkProperties();
+        final Properties sparkProps = PropertiesParser.getSparkProperties();
         return new SparkConf()
                 .setSparkHome(sparkProps.getProperty("spark.home"))
                 .setAppName(sparkProps.getProperty("spark.app.name"))

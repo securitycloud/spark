@@ -9,8 +9,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.VoidFunction;
-import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.SQLContext;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,7 +26,7 @@ public class JsonMain {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        SparkConf conf = ConfigurationProducer.getSparkConf();//new SparkConf().setAppName("JsonTest").setMaster("local[2]");
+        SparkConf conf = SparkConfProducer.getSparkConf();//new SparkConf().setAppName("JsonTest").setMaster("local[2]");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         ObjectMapper mapper = new ObjectMapper(); //with ScalaObjectMapper

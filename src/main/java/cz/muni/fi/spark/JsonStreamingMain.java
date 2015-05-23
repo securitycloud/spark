@@ -31,7 +31,7 @@ public class JsonStreamingMain {
     public static int zeroCount = 0;
 
     public static void main(String[] args) {
-        final SparkConf conf = ConfigurationProducer.getSparkConf();
+        final SparkConf conf = SparkConfProducer.getSparkConf();
         final JavaStreamingContext ssc = new JavaStreamingContext(conf, Durations.seconds(1));
         final JavaReceiverInputDStream<String> lines = ssc.socketTextStream("localhost", 9999, StorageLevels.MEMORY_AND_DISK_SER);
 
