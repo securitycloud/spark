@@ -1,6 +1,8 @@
 package cz.muni.fi.spark;
 
-import cz.muni.fi.kafka.Producer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.muni.fi.json.JSONFlattener;
+import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.util.PropertiesParser;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Durations;
@@ -32,16 +34,19 @@ public class App {
         JavaPairReceiverInputDStream<String, String> messages =
                 KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap);
 
-        messages.foreachRDD(rdd -> { // Each streamed input batch forms an RDD
+        final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
+        // Each streamed input batch forms an RDD
+        messages.foreachRDD(rdd -> {
             rdd.foreachPartition(it -> {
-                final Producer kafkaProd = new Producer();
-                while(it.hasNext()) {
+                final OutputProducer prod = new OutputProducer();
+                while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
-                    System.out.println("sending to kafka: "+msg._2());
-                    kafkaProd.send(it.next());
+                    Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
+                    if (json.get("src_port").equals(49646)) { // filter by src_port 49646
+                        prod.sendJson(new Tuple2<>(null, json));
+                    }
                 }
             });
-            //System.out.println(rdd.count());
             return null;
         });
 
