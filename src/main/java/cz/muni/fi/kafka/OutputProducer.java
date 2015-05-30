@@ -57,6 +57,7 @@ public class OutputProducer {
 
     /**
      * Sets producer specific properties that are passed in KafkaProducer constructor.
+     * Documentation http://kafka.apache.org/documentation.html#newproducerconfigs
      *
      * @return Map of ProducerConfig properties
      */

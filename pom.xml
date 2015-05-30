@@ -17,21 +17,23 @@
         <spark.version>1.3.1</spark.version>
         <scala.binary.version>2.11</scala.binary.version>
         <kafka.version>0.8.2.1</kafka.version>
-        <!-- Kafka and Zookeeper -->
-        <zookeeper.url>localhost:2181</zookeeper.url> <!-- kafka input zk -->
-        <producer.topic>test</producer.topic>
-        <consumer.topic>test</consumer.topic>
-        <!-- Kafka producer http://kafka.apache.org/documentation.html#newproducerconfigs -->
-        <bootstrap.servers>localhost:9092</bootstrap.servers>
-        <value.serializer>org.apache.kafka.common.serialization.StringSerializer</value.serializer>
-        <key.serializer>org.apache.kafka.common.serialization.StringSerializer</key.serializer>
-        <client.id>my-producer</client.id>
+        <!-- Kafka -->
+        <kafka.consumer.zookeeper.url>localhost:2181</kafka.consumer.zookeeper.url>
+        <kafka.consumer.topic>test</kafka.consumer.topic>
+        <kafka.producer.topic>test</kafka.producer.topic>
+        <kafka.producer.servers>localhost:9092</kafka.producer.servers>
+        <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer
+        </kafka.producer.value.serializer>
+        <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer
+        </kafka.producer.key.serializer>
+        <kafka.producer.client.id>my-producer</kafka.producer.client.id>
         <!-- Spark -->
         <spark.home>/home/filip/thesis/spark-1.3.1-bin-hadoop2.6</spark.home>
         <spark.master>local[4]</spark.master>
         <spark.app.name>${project.artifactId}</spark.app.name>
         <spark.ui.port>4040</spark.ui.port>
-        <spark.driver.memory>2g</spark.driver.memory> <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
+        <spark.driver.memory>2g</spark.driver.memory>
+        <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
         <spark.executor.memory>4g</spark.executor.memory>
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
     </properties>
@@ -41,15 +43,30 @@
             <id>filip-localhost</id>
             <properties>
                 <spark.home>/home/filip/thesis/spark-1.3.1-bin-hadoop2.6</spark.home>
-                <zookeeper.url>localhost:2181</zookeeper.url> <!-- kafka input zk -->
-                <bootstrap.servers>localhost:9092</bootstrap.servers> <!-- kafka producer output -->
+                <kafka.consumer.zookeeper.url>localhost:2181</kafka.consumer.zookeeper.url>
+                <kafka.producer.servers>localhost:9092</kafka.producer.servers>
+                <kafka.consumer.topic>test</kafka.consumer.topic>
+                <kafka.producer.topic>test</kafka.producer.topic>
             </properties>
         </profile>
         <profile>
-            <id>testbed</id>
+            <id>filip-testbed-vpn</id>
             <properties>
-                <zookeeper.url>10.16.31.200:2181</zookeeper.url> <!-- kafka input zk -->
-                <bootstrap.servers>10.16.31.201:9092</bootstrap.servers> <!-- kafka producer output -->
+                <spark.home>/home/filip/thesis/spark-1.3.1-bin-hadoop2.6</spark.home>
+                <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
+                <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
+                <kafka.consumer.topic>securitycloud-testing-data</kafka.consumer.topic>
+                <kafka.producer.topic>securitycloud-testing-data</kafka.producer.topic>
+            </properties>
+        </profile>
+        <profile>
+            <id>testbed</id> <!-- to be run from 10.16.31.211 -->
+            <properties>
+                <spark.home>/root/spark/spark-1.3.1-bin-hadoop2.6</spark.home>
+                <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
+                <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
+                <kafka.consumer.topic>securitycloud-testing-data</kafka.consumer.topic>
+                <kafka.producer.topic>securitycloud-testing-data</kafka.producer.topic>
             </properties>
         </profile>
     </profiles>
