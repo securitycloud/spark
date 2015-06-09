@@ -1,9 +1,9 @@
 #!/bin/bash
 
-. scripts/setenv.sh
+. bin/setenv.sh
 
 for i in "${ALL_SERVERS[@]}"
 do
 	echo installing spark on $i
-	. scripts/install-spark.sh $i
+	. bin/install-spark.sh $i
 done

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-. scripts/setenv.sh
+. bin/setenv.sh
 
-. scripts/kill-cluster.sh
+. bin/kill-cluster.sh
 
 for i in "${ALL_SERVERS[@]}"
 do

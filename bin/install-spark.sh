@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. scripts/setenv.sh
+. bin/setenv.sh
 
 if [ -z "$1" ] 
 then
@@ -15,6 +15,8 @@ ssh root@$SERVER "
     cd $WRK
     wget -q $URL_SPARK -O spark.tgz
     mkdir spark-bin-hadoop
+    mkdir project
+    mkdir project/target
     tar -xzvf spark.tgz -C spark-bin-hadoop --strip 1
     rm spark.tgz
 "

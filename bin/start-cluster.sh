@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. scripts/setenv.sh
+. bin/setenv.sh
 
 echo starting standalone spark master server at ${ALL_SERVERS[1]}, url: $MASTERURL
 

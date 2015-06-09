@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. scripts/setenv.sh
+. bin/setenv.sh
 
 for i in "${ALL_SERVERS[@]}"
 do

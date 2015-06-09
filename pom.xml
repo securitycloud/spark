@@ -124,6 +124,9 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+                submits uber-jar to spark-submit: $WRK/project/target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar
+            -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -141,6 +144,8 @@
                     </executable>
                     <commandlineArgs>
                         --class cz.muni.fi.spark.App
+                        --master ${spark.master}
+                        --deploy-mode cluster
                         --driver-memory ${spark.driver.memory}
                         ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}
                     </commandlineArgs>
