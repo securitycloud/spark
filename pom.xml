@@ -46,6 +46,7 @@
                 <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
                 <kafka.consumer.topic>spark-test</kafka.consumer.topic>
                 <kafka.producer.topic>spark-test</kafka.producer.topic>
+                <spark.executor.memory>2g</spark.executor.memory>
             </properties>
         </profile>
     </profiles>
