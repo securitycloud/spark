@@ -42,7 +42,7 @@ public class App {
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
                     Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
-                    if (json.get("src_port").equals(49646)) { // filter by src_port 49646
+                    if (json.get("dst_port").equals(80)) { // filter by
                         prod.sendJson(new Tuple2<>(null, json));
                     }
                 }
@@ -59,8 +59,7 @@ public class App {
         return new SparkConf()
                 .setSparkHome(sparkProps.getProperty("spark.home"))
                 .setAppName(sparkProps.getProperty("spark.app.name"))
-                //.set("spark.ui.port", sparkProps.getProperty("spark.ui.port"))
-                //.setMaster(sparkProps.getProperty("spark.master.url"))
+                .setMaster(sparkProps.getProperty("spark.master.url"))
                 .set("spark.executor.memory", sparkProps.getProperty("spark.executor.memory"))
                 .set("spark.serializer", sparkProps.getProperty("spark.serializer"));
     }
