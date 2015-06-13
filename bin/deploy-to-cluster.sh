@@ -2,12 +2,13 @@
 
 . bin/setenv.sh
 
-#PACK AND COPY
+# pack and copy the spark project
 tar -cf project.tar src pom.xml
 scp project.tar root@${ALL_SERVERS[1]}:/$WRK
 rm project.tar
 
-#COMPILE AND RUN
+SERVERS=${ALL_SERVERS[@]}
+# compile and run, then scp to all slave nodes
 ssh root@${ALL_SERVERS[1]} "
 	cd ${WRK}
 	rm -rf project

@@ -10,7 +10,7 @@ fi
 
 SERVER=$1
 
-# DOWNLOAD AND EXTRACT
+# download and extract spark, prepare folder for project copy
 ssh root@$SERVER "
     cd $WRK
     wget -q $URL_SPARK -O spark.tgz
