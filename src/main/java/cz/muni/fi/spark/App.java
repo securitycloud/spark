@@ -15,6 +15,7 @@ import org.apache.spark.streaming.kafka.KafkaUtils;
 import scala.Tuple2;
 
 import java.util.*;
+import kafka.utils.ZkUtils;
 
 
 /**
@@ -42,6 +43,10 @@ public class App {
         //for (String key : kafkaProps.stringPropertyNames()) {
         //    kafkaPropsMap.put(key, kafkaProps.getProperty(key));
         //}
+        
+        // reset zookeeper data for group so all messages from topic beginning can be read
+        //ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), 
+        //        "/consumers/" + kafkaProps.getProperty("group.id"));
 
         int numStreams = 3;
         List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(numStreams);
