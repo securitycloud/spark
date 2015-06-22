@@ -15,7 +15,7 @@ ssh root@${ALL_SERVERS[1]} "
 	mkdir project
 	tar -xf project.tar -C project
 	cd project
-	mvn clean package -Ptestbed
+	mvn clean package
 	if [ "$?" -gt 0 ]
     	then
         	exit 1;
@@ -24,5 +24,5 @@ ssh root@${ALL_SERVERS[1]} "
 	scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[3]}:$WRK/project/target
 	scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[4]}:$WRK/project/target
 	scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[5]}:$WRK/project/target
-	mvn exec:exec -Ptestbed
+	mvn exec:exec
 "
