@@ -36,7 +36,7 @@
         <spark.executor.memory>2g</spark.executor.memory>
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
         <!-- start receiving all messages from topic start -->
-        <kafka.producer.auto.offset.reset>smallest</kafka.producer.auto.offset.reset>
+        <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
     </properties>
 
     <dependencies>

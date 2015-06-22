@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.json.JSONFlattener;
 import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.util.PropertiesParser;
+import kafka.serializer.StringDecoder;
+import kafka.utils.ZkUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -24,7 +27,7 @@ import java.util.*;
 public class App {
 
     static final long BATCH_INTERVAL = 1000;
-    static final int NUMBER_OF_STREAMS = 1;
+    static final int NUMBER_OF_STREAMS = 5;
 
     public static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
     public static final OutputProducer prod = new OutputProducer();
@@ -40,23 +43,22 @@ public class App {
         //Set<String> topicSet = new HashSet<>();
         //topicSet.add(kafkaProps.getProperty("consumer.topic")); // topic
 
-        //Map<String, String> kafkaPropsMap = new HashMap<String, String>();
-        //for (String key : kafkaProps.stringPropertyNames()) {
-        //    kafkaPropsMap.put(key, kafkaProps.getProperty(key));
-        //}
+        Map<String, String> kafkaPropsMap = new HashMap<>();
+        for (String key : kafkaProps.stringPropertyNames()) {
+            kafkaPropsMap.put(key, kafkaProps.getProperty(key));
+        }
 
         // reset zookeeper data for group so all messages from topic beginning can be read
-        //ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), 
-        //        "/consumers/" + kafkaProps.getProperty("group.id"));
+        ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers/" + kafkaProps.getProperty("group.id"));
 
         List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(NUMBER_OF_STREAMS);
         for (int i = 0; i < NUMBER_OF_STREAMS; i++) {
             // standard basic stream creation
-            kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
+            //kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
 
             // advanced stream creation with kafka properties as parameter
-            //kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class, StringDecoder.class,
-            //        kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER_2()));
+            kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
+                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_ONLY()/*MEMORY_AND_DISK_SER_2()*/));
 
             // direct stream - new approach test
             //kafkaStreams.add(KafkaUtils.createDirectStream(jssc, String.class, String.class, StringDecoder.class, StringDecoder.class, kafkaPropsMap, topicSet));
@@ -74,10 +76,10 @@ public class App {
                     public void call(Iterator<Tuple2<String, String>> it) throws IOException {
                         while (it.hasNext()) { // for each event in partition
                             Tuple2<String, String> msg = it.next();
-                            Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
+                            /*Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
                             if (json.get("dst_port").equals(80)) { // filter
                                 prod.sendJson(new Tuple2<>(null, json)); // send to kafka output
-                            }
+                            }*/
                         }
                     }
                 });
