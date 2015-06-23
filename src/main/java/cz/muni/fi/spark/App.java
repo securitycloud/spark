@@ -58,7 +58,7 @@ public class App {
 
             // advanced stream creation with kafka properties as parameter
             kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
-                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_ONLY()/*MEMORY_AND_DISK_SER_2()*/));
+                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_ONLY_SER()));
 
             // direct stream - new approach test
             //kafkaStreams.add(KafkaUtils.createDirectStream(jssc, String.class, String.class, StringDecoder.class, StringDecoder.class, kafkaPropsMap, topicSet));
@@ -76,6 +76,7 @@ public class App {
                     public void call(Iterator<Tuple2<String, String>> it) throws IOException {
                         while (it.hasNext()) { // for each event in partition
                             Tuple2<String, String> msg = it.next();
+                            prod.send(msg); // send message string to output
                             /*Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
                             if (json.get("dst_port").equals(80)) { // filter
                                 prod.sendJson(new Tuple2<>(null, json)); // send to kafka output
