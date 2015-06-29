@@ -27,7 +27,7 @@ import java.util.*;
 public class App {
 
     static final long BATCH_INTERVAL = 1000;
-    static final int NUMBER_OF_STREAMS = 5;
+    static final int NUMBER_OF_STREAMS = 1; //193048.13, 133297.78
 
     public static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
     public static final OutputProducer prod = new OutputProducer();
@@ -76,11 +76,32 @@ public class App {
                     public void call(Iterator<Tuple2<String, String>> it) throws IOException {
                         while (it.hasNext()) { // for each event in partition
                             Tuple2<String, String> msg = it.next();
-                            prod.send(msg); // send message string to output
-                            /*Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
-                            if (json.get("dst_port").equals(80)) { // filter
-                                prod.sendJson(new Tuple2<>(null, json)); // send to kafka output
-                            }*/
+                            //prod.send(msg); // send message string to output
+                            //Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
+                            //if (json.get("dst_ip_addr").equals("62.148.241.49")) { // filter
+                                //prod.sendJson(new Tuple2<>(null, json)); // send to kafka output
+                            //}
+                            /**
+                             * How to test
+                             * 1) Read only:
+                             * Tuple2<String, String> msg = it.next();
+                             * 2) R/W:
+                             * Tuple2<String, String> msg = it.next();
+                             * prod.send(msg);
+                             * 3) Read only with filter:
+                             * Tuple2<String, String> msg = it.next();
+                             * Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
+                             * if (json.get("dst_ip_addr").equals("62.148.241.49")) {
+                             *
+                             * }
+                             * 4) R/W with filter:
+                             * Tuple2<String, String> msg = it.next();
+                             * prod.send(msg); // send message string to output
+                             * Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
+                             * if (json.get("dst_ip_addr").equals("62.148.241.49")) {
+                             *      prod.sendJson(new Tuple2<>(null, json));
+                             * }
+                             */
                         }
                     }
                 });
