@@ -37,6 +37,8 @@
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
         <!-- start receiving all messages from topic start -->
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
+        <spark.machines>1</spark.machines>
+        <spark.filter></spark.filter>
     </properties>
 
     <dependencies>
@@ -45,6 +47,16 @@
             <artifactId>spark-core_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency> <!-- Spark SQL -->
             <groupId>org.apache.spark</groupId>
@@ -67,6 +79,21 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_${scala.binary.version}</artifactId>
             <version>${kafka.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.1.3</version>
         </dependency>
 
     </dependencies>
@@ -131,13 +158,16 @@
                     <executable>
                         ${spark.home}/bin/spark-submit
                     </executable>
-                    <commandlineArgs>
-                        --class cz.muni.fi.spark.App
-                        --master ${spark.master}
-                        --deploy-mode cluster
-                        --driver-memory ${spark.driver.memory}
-                        ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}
-                    </commandlineArgs>
+                    <arguments>
+                        <argument>--class</argument><argument>cz.muni.fi.spark.App</argument>
+                        <argument>--master</argument><argument>${spark.master}</argument>
+                        <argument>--deploy-mode</argument><argument>cluster</argument>
+                        <argument>--driver-memory</argument><argument>${spark.driver.memory}</argument>
+                        <argument>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}</argument>
+                        <argument>${spark.machines}</argument>
+                        <argument>${spark.filter}</argument>
+                    </arguments>
+
                 </configuration>
             </plugin>
         </plugins>
