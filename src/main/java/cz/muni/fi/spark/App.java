@@ -1,23 +1,15 @@
 package cz.muni.fi.spark;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.muni.fi.json.JSONFlattener;
-import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.util.PropertiesParser;
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
-import scala.Tuple2;
 
-import java.io.IOException;
 import java.util.*;
 
 
@@ -27,10 +19,7 @@ import java.util.*;
 public class App {
 
     static final long BATCH_INTERVAL = 1000;
-    static final int NUMBER_OF_STREAMS = 1; //193048.13, 133297.78
-
-    public static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
-    public static final OutputProducer prod = new OutputProducer();
+    static final int NUMBER_OF_STREAMS = 1;
 
     public static void main(String[] args) {
         final SparkConf sparkConf = getSparkConf();
@@ -65,49 +54,12 @@ public class App {
         }
 
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
-
         // STREAMING
         // Each streamed input batch forms an RDD
-        messages.foreachRDD(new Function<JavaPairRDD<String, String>, Void>() {
-            @Override
-            public Void call(JavaPairRDD<String, String> rdd) throws IOException {
-                rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
-                    @Override
-                    public void call(Iterator<Tuple2<String, String>> it) throws IOException {
-                        while (it.hasNext()) { // for each event in partition
-                            Tuple2<String, String> msg = it.next();
-                            //prod.send(msg); // send message string to output
-                            //Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
-                            //if (json.get("dst_ip_addr").equals("62.148.241.49")) { // filter
-                                //prod.sendJson(new Tuple2<>(null, json)); // send to kafka output
-                            //}
-                            /**
-                             * How to test
-                             * 1) Read only:
-                             * Tuple2<String, String> msg = it.next();
-                             * 2) R/W:
-                             * Tuple2<String, String> msg = it.next();
-                             * prod.send(msg);
-                             * 3) Read only with filter:
-                             * Tuple2<String, String> msg = it.next();
-                             * Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
-                             * if (json.get("dst_ip_addr").equals("62.148.241.49")) {
-                             *
-                             * }
-                             * 4) R/W with filter:
-                             * Tuple2<String, String> msg = it.next();
-                             * prod.send(msg); // send message string to output
-                             * Map<String, Object> json = jsonFlattener.jsonToFlatMap(msg._2());
-                             * if (json.get("dst_ip_addr").equals("62.148.241.49")) {
-                             *      prod.sendJson(new Tuple2<>(null, json));
-                             * }
-                             */
-                        }
-                    }
-                });
-                return null;
-            }
-        });
+        messages.foreachRDD(new ReadWriteTest.ReadOnly());
+//        messages.foreachRDD(new ReadWriteTest.ReadWrite());
+//        messages.foreachRDD(new FilterIPTest.ReadOnly());
+//        messages.foreachRDD(new FilterIPTest.ReadWrite());
 
         jssc.start();
         jssc.awaitTermination();

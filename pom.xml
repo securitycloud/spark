@@ -14,18 +14,19 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Dependency versions -->
-        <spark.version>1.4.0</spark.version>
+        <spark.version>1.4.1</spark.version>
         <scala.binary.version>2.11</scala.binary.version>
         <kafka.version>0.8.2.1</kafka.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
-        <kafka.consumer.topic>spark-test</kafka.consumer.topic>
-        <kafka.producer.topic>spark-test</kafka.producer.topic>
+        <kafka.consumer.topic>test1part</kafka.consumer.topic>
+        <kafka.producer.topic>outputek</kafka.producer.topic>
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
         <kafka.producer.client.id>my-producer</kafka.producer.client.id>
         <kafka.producer.auto.offset.reset>largest</kafka.producer.auto.offset.reset>
+        <kafka.producer.batch.size>1000</kafka.producer.batch.size>
         <!-- Spark -->
         <spark.home>/root/spark/spark-bin-hadoop</spark.home>
         <spark.master>spark://sc-211:7077</spark.master>

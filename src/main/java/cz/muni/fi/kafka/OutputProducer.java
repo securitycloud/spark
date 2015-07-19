@@ -67,6 +67,7 @@ public class OutputProducer {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, kafkaProps.getProperty("value.serializer"));
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, kafkaProps.getProperty("key.serializer"));
         props.put(ProducerConfig.CLIENT_ID_CONFIG, kafkaProps.getProperty("client.id"));
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG, kafkaProps.getProperty("batch.size"));
         return props;
     }
 
