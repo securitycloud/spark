@@ -45,7 +45,7 @@ public class OutputProducer {
      *
      * @param msg Tuple2 to be send
      */
-    public void sendJson(Tuple2<String, Map> msg) {
+    public void sendMap(Tuple2<String, Map> msg) {
         ProducerRecord<String, String> pr = new ProducerRecord<>(kafkaProps.getProperty("producer.topic")/*, 0,*/ /*msg._1()*/, msg._2().toString());
         try {
             producer.send(pr); // producer is null

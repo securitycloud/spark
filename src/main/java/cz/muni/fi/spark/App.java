@@ -1,5 +1,9 @@
 package cz.muni.fi.spark;
 
+import cz.muni.fi.spark.tests.AggregationTest;
+import cz.muni.fi.spark.tests.CountTest;
+import cz.muni.fi.spark.tests.FilterIPTest;
+import cz.muni.fi.spark.tests.ReadWriteTest;
 import cz.muni.fi.util.PropertiesParser;
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
@@ -18,13 +22,13 @@ import java.util.*;
  */
 public class App {
 
-    static final long BATCH_INTERVAL = 1000;
-    static final int NUMBER_OF_STREAMS = 1;
+    static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
+    static final int NUMBER_OF_STREAMS = 5; // should match the number of partitions
 
     public static void main(String[] args) {
         final SparkConf sparkConf = getSparkConf();
         final Properties kafkaProps = PropertiesParser.getKafkaProperties();
-        final JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(BATCH_INTERVAL));
+        final JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(SPARK_STREAMING_BATCH_INTERVAL));
 
         Map<String, Integer> topicMap = new HashMap<>();
         topicMap.put(kafkaProps.getProperty("consumer.topic"), 1); // topic, numThreads
@@ -54,12 +58,19 @@ public class App {
         }
 
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
+        String testClass = "FilterIPTest";
         // STREAMING
         // Each streamed input batch forms an RDD
-        messages.foreachRDD(new ReadWriteTest.ReadOnly());
-//        messages.foreachRDD(new ReadWriteTest.ReadWrite());
-//        messages.foreachRDD(new FilterIPTest.ReadOnly());
-//        messages.foreachRDD(new FilterIPTest.ReadWrite());
+
+        if (testClass == "ReadWriteTest") {
+            messages.foreachRDD(new ReadWriteTest());
+        } else if (testClass == "FilterIPTest") {
+            messages.foreachRDD(new FilterIPTest());
+        } else if (testClass == "CountTest") {
+            messages.foreachRDD(new CountTest());
+        } else if (testClass == "AggregationTest") {
+            messages.foreachRDD(new AggregationTest());
+        }
 
         jssc.start();
         jssc.awaitTermination();

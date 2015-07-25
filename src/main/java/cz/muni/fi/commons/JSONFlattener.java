@@ -1,4 +1,4 @@
-package cz.muni.fi.json;
+package cz.muni.fi.commons;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
