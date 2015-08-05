@@ -34,7 +34,6 @@ public class OutputProducer {
         ProducerRecord<String, String> pr = new ProducerRecord<>(kafkaProps.getProperty("producer.topic")/*, 0,*/ /*msg._1()*/, msg._2());
         try {
             producer.send(pr); // producer is null
-            System.out.println("produced to kafka: "+pr);
         } catch (NullPointerException ex) {
             System.out.println(ex);
         }
@@ -49,7 +48,6 @@ public class OutputProducer {
         ProducerRecord<String, String> pr = new ProducerRecord<>(kafkaProps.getProperty("producer.topic")/*, 0,*/ /*msg._1()*/, msg._2().toString());
         try {
             producer.send(pr); // producer is null
-            System.out.println("produced to kafka: "+pr);
         } catch (NullPointerException ex) {
             System.out.println(ex);
         }

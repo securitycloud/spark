@@ -1,18 +1,18 @@
 package cz.muni.fi.spark;
 
-import cz.muni.fi.spark.tests.AggregationTest;
-import cz.muni.fi.spark.tests.CountTest;
-import cz.muni.fi.spark.tests.FilterIPTest;
-import cz.muni.fi.spark.tests.ReadWriteTest;
+import cz.muni.fi.kafka.OutputProducer;
+import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
+import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
+import scala.Tuple2;
 
 import java.util.*;
 
@@ -47,18 +47,20 @@ public class App {
         List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(NUMBER_OF_STREAMS);
         for (int i = 0; i < NUMBER_OF_STREAMS; i++) {
             // standard basic stream creation
-            //kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
+//            kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
 
             // advanced stream creation with kafka properties as parameter
             kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
-                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_ONLY_SER()));
+                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER()));
 
             // direct stream - new approach test
             //kafkaStreams.add(KafkaUtils.createDirectStream(jssc, String.class, String.class, StringDecoder.class, StringDecoder.class, kafkaPropsMap, topicSet));
         }
 
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
-        String testClass = "FilterIPTest";
+
+        Accumulator<Integer> accum = jssc.sparkContext().accumulator(0);
+        String testClass = "CountTest";
         // STREAMING
         // Each streamed input batch forms an RDD
 
@@ -67,10 +69,12 @@ public class App {
         } else if (testClass == "FilterIPTest") {
             messages.foreachRDD(new FilterIPTest());
         } else if (testClass == "CountTest") {
-            messages.foreachRDD(new CountTest());
-        } else if (testClass == "AggregationTest") {
+            messages.foreachRDD(new CountTest(accum));
+        }/* else if (testClass == "AggregationTest") {
             messages.foreachRDD(new AggregationTest());
-        }
+        } else if (testClass == "TopNTest") {
+            messages.foreachRDD(new TopNTest());
+        }*/
 
         jssc.start();
         jssc.awaitTermination();
