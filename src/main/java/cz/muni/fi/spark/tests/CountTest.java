@@ -22,39 +22,28 @@ public class CountTest implements Function<JavaPairRDD<String, String>, Void> {
     private static final OutputProducer prod = new OutputProducer();
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    //private static final int counterWindow = 1000000;
+    private Accumulator<Integer> filteredIpCount;
 
-    private Accumulator<Integer> totalCount;
-
-    public CountTest(Accumulator<Integer> accum) {
-        this.totalCount = accum;
+    public CountTest(Accumulator<Integer> filteredIpCount) {
+        this.filteredIpCount = filteredIpCount;
     }
 
     @Override
     public Void call(JavaPairRDD<String, String> rdd) throws IOException {
-        /*JavaPairRDD<String, String> filteredRDD = rdd.filter(new Function<Tuple2<String, String>, Boolean>() {
-            @Override
-            public Boolean call(Tuple2<String, String> tuple) throws Exception {
-                Flow flow = mapper.readValue(tuple._2(), Flow.class);
-                if (flow.getDst_ip_addr().equals(FILTERED_IP)) {
-                    return true;
-                }
-                return false;
-            }
-        });*/
-        rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String,String>>>() {
+        rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
+                Integer count = 0;
                 while (it.hasNext()) { // for each event in partition
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
                     if (flow.getDst_ip_addr().equals(FILTERED_IP)) {
-                        totalCount.add(1);
+                        count++;
                     }
                 }
+                filteredIpCount.add(count);
             }
         });
-        prod.send(new Tuple2<>(null, "IP: " + FILTERED_IP + ", amount of packets: " + totalCount.value()));
         return null;
     }
 }

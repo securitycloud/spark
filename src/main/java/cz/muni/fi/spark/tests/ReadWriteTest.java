@@ -1,5 +1,6 @@
 package cz.muni.fi.spark.tests;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.kafka.OutputProducer;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.Function;

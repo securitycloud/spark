@@ -19,14 +19,14 @@
         <kafka.version>0.8.2.1</kafka.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
-        <kafka.consumer.topic>test1part</kafka.consumer.topic>
-        <kafka.producer.topic>outputek</kafka.producer.topic>
+        <kafka.consumer.topic>topicFullOfAwesomness</kafka.consumer.topic>
+        <kafka.producer.topic>sparktestout</kafka.producer.topic>
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
         <kafka.producer.client.id>my-producer</kafka.producer.client.id>
         <kafka.producer.auto.offset.reset>largest</kafka.producer.auto.offset.reset>
-        <kafka.producer.batch.size>1000</kafka.producer.batch.size>
+        <kafka.producer.batch.size>5000</kafka.producer.batch.size>
         <!-- Spark -->
         <spark.home>/root/spark/spark-bin-hadoop</spark.home>
         <spark.master>spark://sc-211:7077</spark.master>
@@ -69,7 +69,6 @@
             <artifactId>kafka_${scala.binary.version}</artifactId>
             <version>${kafka.version}</version>
         </dependency>
-
     </dependencies>
 
     <build>

@@ -21,7 +21,7 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
 
     private static final OutputProducer prod = new OutputProducer();
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
+    //private static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
 
     // USING OBJECT MAPPER AND FLOW POJO
     @Override

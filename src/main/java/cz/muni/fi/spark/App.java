@@ -1,6 +1,8 @@
 package cz.muni.fi.spark;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.kafka.OutputProducer;
+import cz.muni.fi.spark.accumulators.MapAccumulator;
 import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
 import kafka.serializer.StringDecoder;
@@ -25,6 +27,8 @@ public class App {
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
     static final int NUMBER_OF_STREAMS = 5; // should match the number of partitions
 
+    private static final OutputProducer prod = new OutputProducer();
+
     public static void main(String[] args) {
         final SparkConf sparkConf = getSparkConf();
         final Properties kafkaProps = PropertiesParser.getKafkaProperties();
@@ -47,7 +51,7 @@ public class App {
         List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(NUMBER_OF_STREAMS);
         for (int i = 0; i < NUMBER_OF_STREAMS; i++) {
             // standard basic stream creation
-//            kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
+            // kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
 
             // advanced stream creation with kafka properties as parameter
             kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
@@ -59,22 +63,47 @@ public class App {
 
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
 
-        Accumulator<Integer> accum = jssc.sparkContext().accumulator(0);
-        String testClass = "CountTest";
+
+        String testClass = "ReadWriteTest";
         // STREAMING
         // Each streamed input batch forms an RDD
-
-        if (testClass == "ReadWriteTest") {
-            messages.foreachRDD(new ReadWriteTest());
-        } else if (testClass == "FilterIPTest") {
-            messages.foreachRDD(new FilterIPTest());
-        } else if (testClass == "CountTest") {
-            messages.foreachRDD(new CountTest(accum));
-        }/* else if (testClass == "AggregationTest") {
-            messages.foreachRDD(new AggregationTest());
-        } else if (testClass == "TopNTest") {
-            messages.foreachRDD(new TopNTest());
-        }*/
+        switch(testClass) {
+            case "ReadWriteTest": {
+                messages.foreachRDD(new ReadWriteTest());
+                break;
+            }
+            case "FilterIPTest": {
+                messages.foreachRDD(new FilterIPTest());
+                break;
+            }
+            case "CountTest": {
+                Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0);
+                messages.foreachRDD(new CountTest(filteredIpCount));
+                /**
+                 * Thread that checks in interval whether we have reached the end of our test data.
+                 * If the end was reached, then it sends a message to Kafka producer.
+                 */
+                Thread countTestObserver = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            Integer count = filteredIpCount.value();
+                            if (count == 33632090) { // filtered events out of total 36846558
+                                prod.send(new Tuple2<>(null, "IP: amount of packets: " + count));
+                                break;
+                            }
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                System.out.println(e.getLocalizedMessage());
+                            }
+                        }
+                    }
+                });
+                countTestObserver.start();
+                break;
+            }
+        }
 
         jssc.start();
         jssc.awaitTermination();
@@ -92,6 +121,7 @@ public class App {
                 .setAppName(sparkProps.getProperty("spark.app.name"))
                 .setMaster(sparkProps.getProperty("spark.master.url"))
                 .set("spark.executor.memory", sparkProps.getProperty("spark.executor.memory"))
-                .set("spark.serializer", sparkProps.getProperty("spark.serializer"));
+                .set("spark.serializer", sparkProps.getProperty("spark.serializer"))
+                .set("spark.streaming.receiver.maxRate", "0");
     }
 }
