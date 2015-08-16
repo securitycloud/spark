@@ -22,9 +22,11 @@ public class CountTest implements Function<JavaPairRDD<String, String>, Void> {
     private static final OutputProducer prod = new OutputProducer();
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private Accumulator<Integer> processedRecordsCounter;
     private Accumulator<Integer> filteredIpCount;
 
-    public CountTest(Accumulator<Integer> filteredIpCount) {
+    public CountTest(Accumulator<Integer> processedRecordsCounter, Accumulator<Integer> filteredIpCount) {
+        this.processedRecordsCounter = processedRecordsCounter;
         this.filteredIpCount = filteredIpCount;
     }
 
@@ -33,15 +35,17 @@ public class CountTest implements Function<JavaPairRDD<String, String>, Void> {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
-                Integer count = 0;
+                Integer tempCount = 0; // all records
+                Integer tempFilteredCount = 0; // fitlered records
                 while (it.hasNext()) { // for each event in partition
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
                     if (flow.getDst_ip_addr().equals(FILTERED_IP)) {
-                        count++;
+                        tempFilteredCount++;
                     }
                 }
-                filteredIpCount.add(count);
+                processedRecordsCounter.add(tempCount);
+                filteredIpCount.add(tempFilteredCount);
             }
         });
         return null;

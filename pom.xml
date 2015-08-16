@@ -20,7 +20,7 @@
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
         <kafka.consumer.topic>topicFullOfAwesomness</kafka.consumer.topic>
-        <kafka.producer.topic>sparktestout</kafka.producer.topic>
+        <kafka.producer.topic>testout</kafka.producer.topic>
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
@@ -32,9 +32,11 @@
         <spark.master>spark://sc-211:7077</spark.master>
         <spark.app.name>${project.artifactId}</spark.app.name>
         <spark.ui.port>4040</spark.ui.port>
-        <spark.driver.memory>2g</spark.driver.memory>
+        <spark.driver.memory>2500mb</spark.driver.memory>
         <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
-        <spark.executor.memory>2g</spark.executor.memory>
+        <spark.executor.memory>2500mb</spark.executor.memory>
+        <spark.driver.cores>2</spark.driver.cores>
+        <spark.default.parallelism>8</spark.default.parallelism>
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
         <!-- start receiving all messages from topic start -->
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>

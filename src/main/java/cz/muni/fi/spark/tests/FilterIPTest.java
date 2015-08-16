@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.commons.Flow;
 import cz.muni.fi.commons.JSONFlattener;
 import cz.muni.fi.kafka.OutputProducer;
+import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
@@ -23,19 +24,28 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
     private static final ObjectMapper mapper = new ObjectMapper();
     //private static final JSONFlattener jsonFlattener = new JSONFlattener(new ObjectMapper());
 
+    private Accumulator<Integer> processedRecordsCounter;
+
+    public FilterIPTest(Accumulator<Integer> processedRecordsCounter) {
+        this.processedRecordsCounter = processedRecordsCounter;
+    }
+
     // USING OBJECT MAPPER AND FLOW POJO
     @Override
     public Void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
+                Integer tempCount = 0;
                 while (it.hasNext()) { // for each event in partition
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
                     if (flow.getDst_ip_addr().equals(FILTERED_IP)) {
                         prod.send(new Tuple2<>(null, flow.toString()));
                     }
+                    tempCount++;
                 }
+                processedRecordsCounter.add(tempCount);
             }
         });
         return null;

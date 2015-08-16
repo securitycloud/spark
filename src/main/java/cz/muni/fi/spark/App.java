@@ -16,6 +16,8 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 import scala.Tuple2;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
@@ -25,7 +27,7 @@ import java.util.*;
 public class App {
 
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
-    static final int NUMBER_OF_STREAMS = 5; // should match the number of partitions
+    static final int NUMBER_OF_STREAMS = 2; // should match the number of partitions
 
     private static final OutputProducer prod = new OutputProducer();
 
@@ -64,32 +66,33 @@ public class App {
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
 
 
-        String testClass = "ReadWriteTest";
+        String testClass = "FilterIPTest";
+        Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0);
         // STREAMING
         // Each streamed input batch forms an RDD
-        switch(testClass) {
+        switch (testClass) {
             case "ReadWriteTest": {
-                messages.foreachRDD(new ReadWriteTest());
+                messages.foreachRDD(new ReadWriteTest(processedRecordsCounter));
                 break;
             }
             case "FilterIPTest": {
-                messages.foreachRDD(new FilterIPTest());
+                messages.foreachRDD(new FilterIPTest(processedRecordsCounter));
                 break;
             }
             case "CountTest": {
                 Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0);
-                messages.foreachRDD(new CountTest(filteredIpCount));
+                messages.foreachRDD(new CountTest(processedRecordsCounter, filteredIpCount));
                 /**
                  * Thread that checks in interval whether we have reached the end of our test data.
                  * If the end was reached, then it sends a message to Kafka producer.
                  */
-                Thread countTestObserver = new Thread(new Runnable() {
+                Thread countTestFinishObserver = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         while (true) {
-                            Integer count = filteredIpCount.value();
-                            if (count == 33632090) { // filtered events out of total 36846558
-                                prod.send(new Tuple2<>(null, "IP: amount of packets: " + count));
+                            Integer filtered = filteredIpCount.value();
+                            if (filtered == 33632090) { // filtered events out of total 36846558
+                                prod.send(new Tuple2<>(null, "IP: amount of packets: " + filtered));
                                 break;
                             }
                             try {
@@ -100,10 +103,56 @@ public class App {
                         }
                     }
                 });
-                countTestObserver.start();
+                countTestFinishObserver.start();
                 break;
             }
         }
+
+        try {
+            Thread.sleep(10000); // wait for spark to start processing
+        } catch (InterruptedException e) {
+            System.out.println(e.getLocalizedMessage());
+        }
+
+        /**
+         * Thread for performance monitoring.
+         */
+        Thread performanceMeasuringThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Long min = 0L;
+                Long max = 0L;
+
+                LocalDateTime startDateTime = LocalDateTime.now();
+                while (true) {
+                    Integer processedRecords = processedRecordsCounter.value();
+                    if (processedRecords != 0) {
+                        Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
+                        if (processingTimeInMillis >= 1000) {
+                            Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
+                            if (min == 0L) {
+                                min = averageSpeed;
+                            }
+                            if (averageSpeed > max) {
+                                max = averageSpeed;
+                            }
+                            if (averageSpeed < min) {
+                                min = averageSpeed;
+                            }
+                            System.out.println("average speed: " + averageSpeed + " records/s");
+                            System.out.println("min speed: " + min + " records/s");
+                            System.out.println("max speed: " + max + " records/s");
+                        }
+                    }
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        System.out.println(e.getLocalizedMessage());
+                    }
+                }
+            }
+        });
+        performanceMeasuringThread.start();
 
         jssc.start();
         jssc.awaitTermination();
@@ -122,6 +171,7 @@ public class App {
                 .setMaster(sparkProps.getProperty("spark.master.url"))
                 .set("spark.executor.memory", sparkProps.getProperty("spark.executor.memory"))
                 .set("spark.serializer", sparkProps.getProperty("spark.serializer"))
-                .set("spark.streaming.receiver.maxRate", "0");
+                .set("spark.driver.cores", sparkProps.getProperty("spark.driver.cores"))
+                .set("spark.default.parallelism", sparkProps.getProperty("spark.default.parallelism"));
     }
 }
