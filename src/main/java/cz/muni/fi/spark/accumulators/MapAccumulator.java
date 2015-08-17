@@ -19,7 +19,6 @@ public class MapAccumulator implements AccumulatorParam<Map<String, Integer>>, S
     @Override
     public Map<String, Integer> addInPlace(Map<String, Integer> r1, Map<String, Integer> r2) {
         return mergeMap(r1, r2);
-
     }
 
     @Override

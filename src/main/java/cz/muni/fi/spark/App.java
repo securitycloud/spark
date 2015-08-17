@@ -1,14 +1,14 @@
 package cz.muni.fi.spark;
 
+import cz.muni.fi.commons.MapValueComparator;
+import cz.muni.fi.commons.Triplet;
 import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.spark.accumulators.MapAccumulator;
-import cz.muni.fi.spark.tests.AggregationTest;
-import cz.muni.fi.spark.tests.CountTest;
-import cz.muni.fi.spark.tests.FilterIPTest;
-import cz.muni.fi.spark.tests.ReadWriteTest;
+import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.storage.StorageLevel;
@@ -31,11 +31,11 @@ public class App {
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
     static final int NUMBER_OF_STREAMS = 3; // number of kafka streams, should be less or equal to the number of kafka partitions
     static final String FILTER_TEST_IP = "62.148.241.49";
+    static final long TEST_DATA_RECORDS_SIZE = 36846558; // total amount of events in our data set
 
     private static final OutputProducer prod = new OutputProducer();
 
     /**
-     *
      * @param args
      */
     public static void main(String[] args) {
@@ -71,7 +71,7 @@ public class App {
         }
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
 
-        final String testClass = "CountTest"; // to be redone into command line argument, name of test class to be run
+        final String testClass = "SynScanTest"; // to be redone into command line argument, name of test class to be run
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0);
         // STREAMING, Each streamed input batch forms an RDD
         switch (testClass) {
@@ -91,9 +91,9 @@ public class App {
                     @Override
                     public void run() {
                         while (true) {
-                            Integer totalProcessed = processedRecordsCounter.value();
-                            if (totalProcessed == 36846558) { // filtered events out of total 36846558,
-                                prod.send(new Tuple2<>(null, "IP: "+FILTER_TEST_IP+", amount of packets: " + filteredIpCount.value())); // kafka consumer dostane jednu zpravu obsahující IP a sumu paketu
+                            Integer processedRecords = processedRecordsCounter.value();
+                            if (processedRecords == TEST_DATA_RECORDS_SIZE) { // filtered events out of total 36846558,
+                                prod.send(new Tuple2<>(null, "IP: " + FILTER_TEST_IP + ", amount of packets: " + filteredIpCount.value())); // kafka consumer dostane jednu zpravu obsahující IP a sumu paketu
                                 break;
                             }
                             try {
@@ -108,16 +108,16 @@ public class App {
                 break;
             }
             case "AggregationTest": {
-                Accumulator<Map<String, Integer>> ipOccurences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
-                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipOccurences));
+                Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
+                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
                 // Checks in interval whether we have reached the end of our test data and sends message to Kafka on end.
                 Thread aggregationTestFinishObserver = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         while (true) {
-                            Integer totalProcessed = processedRecordsCounter.value();
-                            if (totalProcessed == 36846558) { // kafka-consumer dostane po zpracování datové sady mapu dvojic [dst IP, počet packetů]
-                                prod.send(new Tuple2<>(null, ipOccurences.value().toString()));
+                            Integer processedRecords = processedRecordsCounter.value();
+                            if (processedRecords == TEST_DATA_RECORDS_SIZE) { // kafka-consumer dostane po zpracování datové sady mapu dvojic [dst IP, počet packetů]
+                                prod.send(new Tuple2<>(null, ipPackets.value().toString()));
                                 break;
                             }
                             try {
@@ -132,13 +132,75 @@ public class App {
                 break;
             }
             case "TopNTest": {
+                Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
+                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
+                // Checks in interval whether we have reached the end of our test data and sends message to Kafka on end.
+                Thread topNTestFinishObserver = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            Integer processedRecords = processedRecordsCounter.value();
+                            if (processedRecords == TEST_DATA_RECORDS_SIZE) {
+                                Map<String, Integer> total = ipPackets.value();
+                                MapValueComparator valueComparator = new MapValueComparator(total);
+                                TreeMap<String, Integer> sortedTotal = new TreeMap<>(valueComparator);
+                                sortedTotal.putAll(total);
+                                int n = 10; // top n
+                                int position = 1; // starting index
+                                List<Triplet<Integer, String, Integer>> topElements = new ArrayList<>();
+                                for (String ip : sortedTotal.keySet()) {
+                                    // triplet of position, ip and packet count
+                                    Triplet<Integer, String, Integer> triplet = new Triplet<>(position, ip, total.get(ip));
+                                    topElements.add(triplet);
+                                    if (position == n) {
+                                        break;
+                                    } else {
+                                        position++;
+                                    }
+                                }
+                                prod.send(new Tuple2<>(null, topElements.toString()));
+                            }
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                System.out.println(e.getLocalizedMessage());
+                            }
+                        }
+                    }
+                });
+                topNTestFinishObserver.start();
                 break;
             }
             case "SynScanTest": {
+                Accumulator<Map<String, Integer>> ipOccurrences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
+                messages.foreachRDD(new SynScanTest(processedRecordsCounter, ipOccurrences));
+                // Checks in interval whether we have reached the end of our test data and sends message to Kafka on end.
+                Thread synScanTestFinishObserver = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            Integer processedRecords = processedRecordsCounter.value();
+                            if (processedRecords == TEST_DATA_RECORDS_SIZE) {
+                                Map<String, Integer> total = ipOccurrences.value();
+                                Map<String, Integer> filtered = SynScanTest.filterMap(total);
+                                System.out.println("all: " + total.size());
+                                System.out.println("filtered: " + filtered.size());
+                                prod.send(new Tuple2<>(null, filtered.toString()));
+                                break;
+                            }
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                System.out.println(e.getLocalizedMessage());
+                            }
+                        }
+                    }
+                });
+                synScanTestFinishObserver.start();
                 break;
             }
             default: {
-                throw new IllegalArgumentException("test class name does not exist: "+testClass);
+                throw new IllegalArgumentException("test class name does not exist: " + testClass);
             }
         }
 

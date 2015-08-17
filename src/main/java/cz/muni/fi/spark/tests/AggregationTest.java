@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Computes a key value map with IP addresses and the amount of their occurrences in the stream.
+ * Computes a key value map with dst IP addresses and the amount of their packets in the stream.
  * At the end, merges the map with shared accumulator map of all occurrences.
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
@@ -22,17 +22,17 @@ public class AggregationTest implements Function<JavaPairRDD<String, String>, Vo
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private Accumulator<Integer> processedRecordsCounter;
-    private Accumulator<Map<String, Integer>> ipOccurrences;
+    private Accumulator<Map<String, Integer>> ipPackets;
 
     /**
      * Initializes Aggregation test class with passed Accumulators.
      *
      * @param processedRecordsCounter Accumulator with total of processed records
-     * @param ipOccurrences Map<String, Integer> Accumulator with all the found IP addresses and their occurences
+     * @param ipPackets               Map<String, Integer> Accumulator with all the found IP addresses and their occurrences
      */
-    public AggregationTest(Accumulator<Integer> processedRecordsCounter, Accumulator<Map<String, Integer>> ipOccurrences) {
+    public AggregationTest(Accumulator<Integer> processedRecordsCounter, Accumulator<Map<String, Integer>> ipPackets) {
         this.processedRecordsCounter = processedRecordsCounter;
-        this.ipOccurrences = ipOccurrences;
+        this.ipPackets = ipPackets;
     }
 
     @Override
@@ -40,19 +40,19 @@ public class AggregationTest implements Function<JavaPairRDD<String, String>, Vo
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
-                Map<String, Integer> tempIpOccurences = new HashMap<>();
+                Map<String, Integer> tempIpPackets = new HashMap<>();
                 Integer tempCount = 0;
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
-                    if (!tempIpOccurences.containsKey(flow.getDst_ip_addr())) { // put in new key with value 1
-                        tempIpOccurences.put(flow.getDst_ip_addr(), 1);
-                    } else { // increment existing key value
-                        tempIpOccurences.put(flow.getDst_ip_addr(), tempIpOccurences.get(flow.getDst_ip_addr()) + 1);
+                    if (!tempIpPackets.containsKey(flow.getDst_ip_addr())) { // put in new key
+                        tempIpPackets.put(flow.getDst_ip_addr(), flow.getPackets());
+                    } else { // increment existing value
+                        tempIpPackets.put(flow.getDst_ip_addr(), tempIpPackets.get(flow.getDst_ip_addr()) + flow.getPackets());
                     }
                     tempCount++;
                 }
-                ipOccurrences.add(tempIpOccurences);
+                ipPackets.add(tempIpPackets);
                 processedRecordsCounter.add(tempCount);
             }
         });
