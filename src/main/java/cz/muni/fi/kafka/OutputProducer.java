@@ -12,8 +12,6 @@ import java.util.Properties;
 
 /**
  * Kafka producer.
- *
- * Created by filip on 23.5.15.
  */
 public class OutputProducer {
 
@@ -26,33 +24,22 @@ public class OutputProducer {
     }
 
     /**
-     * Sends a key-value message to Kafka.
+     * Sends a key value pair to Kafka, key is null, value is string.
      *
      * @param msg Tuple2 to be send
      */
     public void send(Tuple2<String, String> msg) {
-        ProducerRecord<String, String> pr = new ProducerRecord<>(kafkaProps.getProperty("producer.topic")/*, 0,*/ /*msg._1()*/, msg._2());
-        try {
-            producer.send(pr); // producer is null
-            System.out.println("produced to kafka: "+pr);
-        } catch (NullPointerException ex) {
-            System.out.println(ex);
-        }
+        producer.send(new ProducerRecord<>(kafkaProps.getProperty("producer.topic"), null, msg._2()));
     }
 
     /**
-     * Sends a json map using toString().
+     * Sends a key value pair to Kafka, key is null, value is string.
      *
      * @param msg Tuple2 to be send
+     * @param topic overrides the default output topic
      */
-    public void sendMap(Tuple2<String, Map> msg) {
-        ProducerRecord<String, String> pr = new ProducerRecord<>(kafkaProps.getProperty("producer.topic")/*, 0,*/ /*msg._1()*/, msg._2().toString());
-        try {
-            producer.send(pr); // producer is null
-            System.out.println("produced to kafka: "+pr);
-        } catch (NullPointerException ex) {
-            System.out.println(ex);
-        }
+    public void send(Tuple2<String, String> msg, String topic) {
+        producer.send(new ProducerRecord<>(topic, null, msg._2()));
     }
 
     /**
