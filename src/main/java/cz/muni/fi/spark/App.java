@@ -42,6 +42,17 @@ public class App {
         final SparkConf sparkConf = getSparkConf();
         final Properties kafkaProps = PropertiesParser.getKafkaProperties();
         final JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(SPARK_STREAMING_BATCH_INTERVAL));
+        
+        final String testClass = (args.length > 0 ? args[0] : "SynScanTest");
+        
+        int tmpStreamsCount = NUMBER_OF_STREAMS;
+        if (args.length > 1) {
+            try {
+                tmpStreamsCount = Integer.parseInt(args[1]);
+            } catch (NumberFormatException numberFormatException) {
+            }
+        }
+        final int streamsCount = tmpStreamsCount;
 
         Map<String, Integer> topicMap = new HashMap<>();
         topicMap.put(kafkaProps.getProperty("consumer.topic"), 1); // topic, numThreads
@@ -57,8 +68,8 @@ public class App {
         // reset zookeeper data for group so all messages from topic beginning can be read
         ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers/" + kafkaProps.getProperty("group.id"));
 
-        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(NUMBER_OF_STREAMS);
-        for (int i = 0; i < NUMBER_OF_STREAMS; i++) {
+        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(streamsCount);
+        for (int i = 0; i < streamsCount; i++) {
             // standard basic stream creation
             // kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
 
@@ -71,7 +82,6 @@ public class App {
         }
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
 
-        final String testClass = "SynScanTest"; // to be redone into command line argument, name of test class to be run
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0);
         // STREAMING, Each streamed input batch forms an RDD
         switch (testClass) {

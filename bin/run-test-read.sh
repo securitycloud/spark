@@ -4,33 +4,31 @@
 
 if [ -z "$1" ] 
 then
-    echo -e $ERR You must specify Number of computers $OFF
+    echo -e $ERR You must specify Test type $OFF
     exit 1;
 fi
-COMPUTERS=$1
+TESTTYPE=$1
 
 if [ -z "$2" ] 
 then
-    echo -e $ERR You must specify Number of partitions $OFF
+    echo -e $ERR You must specify Number of computers $OFF
     exit 2;
 fi
-PARTITIONS=$2
+COMPUTERS=$3
 
 if [ -z "$3" ] 
 then
-    echo -e $ERR You must specify Batch size $OFF
+    echo -e $ERR You must specify Number of partitions $OFF
     exit 3;
 fi
-BATCH_SIZE=$3
+PARTITIONS=$3
 
 if [ -z "$4" ] 
 then
-    FILTER=""
-    #echo -e $ERR You must specify Filter $OFF
-    #exit 4;
-else
-    FILTER=$4
+    echo -e $ERR You must specify Batch size $OFF
+    exit 4;
 fi
+BATCH_SIZE=$4
 
 
 echo -e $LOG Recreating output topic $TESTING_TOPIC with 1 partitions on $KAFKA_CONSUMER $OFF
@@ -42,7 +40,7 @@ bin/run-topic.sh $TESTING_TOPIC 1 $KAFKA_CONSUMER
 #        $KAFKA_INSTALL/bin/kafka-console-producer.sh --topic $SERVICE_TOPIC --broker-list localhost:9092
 #"
 
-echo -e $LOG Running on $COMPUTERS computers, filter $FILTER $OFF
+echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers
 
 
 # pack and copy the spark project
@@ -72,17 +70,17 @@ ssh root@${ALL_SERVERS[1]} "
     		echo copying slave node to ${ALL_SERVERS[3]}
     		scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[3]}:$WRK/project/target
     	fi
-    if [ "$NUMBER_OF_SLAVES" -ge 3  ]
+        if [ "$NUMBER_OF_SLAVES" -ge 3  ]
         then
         	echo copying slave node to ${ALL_SERVERS[4]}
             scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[4]}:$WRK/project/target
         fi
-    if [ "$NUMBER_OF_SLAVES" -ge 4  ]
+        if [ "$NUMBER_OF_SLAVES" -ge 4  ]
         then
         	echo copying slave node to ${ALL_SERVERS[5]}
             scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[5]}:$WRK/project/target
         fi
-	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.filter=$FILTER | sed -n -e 's/^.*Driver successfully submitted as //p' > /root/spark/driverId.txt
+	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /root/spark/driverId.txt
 "
 
 

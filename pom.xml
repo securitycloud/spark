@@ -42,6 +42,7 @@
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
         <spark.machines>1</spark.machines>
         <spark.filter></spark.filter>
+        <spark.testtype></spark.testtype>
     </properties>
 
     <dependencies>
@@ -166,8 +167,8 @@
                         <argument>--deploy-mode</argument><argument>cluster</argument>
                         <argument>--driver-memory</argument><argument>${spark.driver.memory}</argument>
                         <argument>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}</argument>
+                        <argument>${spark.testtype}</argument>
                         <argument>${spark.machines}</argument>
-                        <argument>${spark.filter}</argument>
                     </arguments>
 
                 </configuration>
