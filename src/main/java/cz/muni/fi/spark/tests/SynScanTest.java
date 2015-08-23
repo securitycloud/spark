@@ -55,7 +55,7 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
                     }
                     tempCount++;
                 }
-                ipOccurrences.add(tempIpOccurences);
+                ipOccurrences.add(filterMap(tempIpOccurences));
                 processedRecordsCounter.add(tempCount);
             }
         });

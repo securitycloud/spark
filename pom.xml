@@ -17,9 +17,10 @@
         <spark.version>1.4.1</spark.version>
         <scala.binary.version>2.11</scala.binary.version>
         <kafka.version>0.8.2.1</kafka.version>
+        <fastutil.version>7.0.7</fastutil.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
-        <kafka.consumer.topic>topicFullOfAwesomness</kafka.consumer.topic>
+        <kafka.consumer.topic>storm-test</kafka.consumer.topic>
         <kafka.producer.topic>testout</kafka.producer.topic>
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
@@ -40,9 +41,10 @@
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
         <!-- start receiving all messages from topic start -->
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
-        <spark.machines>1</spark.machines>
-        <spark.filter></spark.filter>
-        <spark.testtype></spark.testtype>
+        <!-- command line arguments defaults -->
+        <spark.machines>Undefined</spark.machines>
+        <spark.testtype>Undefined</spark.testtype>
+        <spark.filter></spark.filter> <!-- I think we do not need this anymore -->
     </properties>
 
     <dependencies>
