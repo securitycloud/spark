@@ -23,6 +23,7 @@ import org.apache.spark.streaming.kafka.KafkaUtils;
 import scala.Tuple2;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -145,6 +146,7 @@ public class App {
 
         // REGULAR CHECK FOR DATA SET FINISH AND TEST POST PROCESSING, PERFORMANCE MEASUREMENT
         new Thread(() -> {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             Long min = 0L;
             Long max = 0L;
             LocalDateTime startDateTime = LocalDateTime.now();
@@ -154,8 +156,8 @@ public class App {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
-                    final String testInfo = LocalDateTime.now().toString() + ": " + testClass + ": " + 
-                            machinesCount + " machines / " + kafkaStreamsCount + " kafka streams.";
+                    final String testInfo = LocalDateTime.now().format(formatter) + " " + testClass + " [" +
+                            machinesCount + " machines / " + kafkaStreamsCount + " streams]";
                     
                     switch (testClass) {
                         case "ReadWriteTest": {
@@ -215,9 +217,8 @@ public class App {
                     // common for all tests: print test info to console and test info + performance info to kafka
                     Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
                     Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
-                    final String performanceResult = String.format("Speed (min/max/avg): %s | %s | %s rec/s. Processed records: %s.", 
-                            min, max, averageSpeed, processedRecords);
-                    
+                    final String performanceResult = String.format("[k flows/s (min/max/avg): %s | %s | %s ] [processed total: %s]",
+                            min/1000, max/1000, averageSpeed/1000, processedRecords);
                     System.out.println(testInfo);
                     System.out.println(performanceResult);
                     printTestResult(resultsTopic, null, Arrays.asList(testInfo + " " + performanceResult));
@@ -238,10 +239,8 @@ public class App {
                             if (averageSpeed < min) {
                                 min = averageSpeed;
                             }
-                            System.out.println(processedRecords);
-                            System.out.println("avg speed: " + averageSpeed + " records/s");
-                            System.out.println("min speed: " + min + " records/s");
-                            System.out.println("max speed: " + max + " records/s");
+                            System.out.println(String.format("[k flows/s (min/max/avg): %s | %s | %s ] [processed total: %s]",
+                                    min/1000, max/1000, averageSpeed/1000, processedRecords));
                         }
                     }
                     step++;
