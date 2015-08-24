@@ -49,6 +49,8 @@ scp project.tar root@${ALL_SERVERS[1]}:/$WRK
 rm project.tar
 SERVERS=${ALL_SERVERS[@]}
 # compile and run, then scp to all slave nodes
+NUMBER_OF_SLAVES=$((COMPUTERS - 1))
+
 ssh root@${ALL_SERVERS[1]} "
 	cd ${WRK}
 	rm -rf project/
@@ -84,8 +86,8 @@ ssh root@${ALL_SERVERS[1]} "
 "
 
 
-
-sleep 120
+bin/done-test.sh
+#sleep 120
 
 ssh root@${ALL_SERVERS[1]} "
 	cd ${WRK}

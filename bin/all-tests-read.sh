@@ -11,9 +11,9 @@ TESTTYPES[4]=AggregationTest
 TESTTYPES[5]=TopNTest
 TESTTYPES[6]=SynScanTest
 
-COMPUTERS[1]=1
+COMPUTERS[1]=5
 COMPUTERS[2]=3
-COMPUTERS[3]=5
+#COMPUTERS[3]=1
 
 REPEAT=5
 
@@ -35,10 +35,12 @@ for BS in "${BATCH_SIZE[@]}"
 do
     for PC in "${COMPUTERS[@]}"
     do
-        echo -e $LOG Recreating input topic $TESTING_TOPIC with $PC partitions on $KAFKA_PRODUCER $OFF
-        bin/run-topic.sh $TESTING_TOPIC $PC $KAFKA_PRODUCER
+        #echo -e $LOG Recreating input topic $TESTING_TOPIC with $PC partitions on $KAFKA_PRODUCER $OFF
+        #bin/run-topic.sh $TESTING_TOPIC $PC $KAFKA_PRODUCER
 
-        bin/run-input.sh $BS
+        #bin/run-input.sh $BS
+
+        NUMBER_OF_SLAVES=$((PC - 1))
 
         for i in `seq 1 $REPEAT`
         do

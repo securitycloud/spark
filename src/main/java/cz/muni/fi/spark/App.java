@@ -80,7 +80,7 @@ public class App {
 
         // INITIALIZE SPARK KAFKA STREAMS
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
-        topicMap.put(kafkaProps.getProperty("consumer.topic"), 1); // topic, numThreads
+        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + machinesCount + "part", 1); // topic, numThreads
 
         Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
         for (String key : kafkaProps.stringPropertyNames()) {
