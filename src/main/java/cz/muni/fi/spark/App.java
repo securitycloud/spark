@@ -6,8 +6,10 @@ import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.spark.accumulators.MapAccumulator;
 import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
+
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
 import org.apache.commons.cli.MissingArgumentException;
@@ -44,7 +46,7 @@ public class App {
     public static void main(String[] args) throws MissingArgumentException {
         // VALIDATE AND PARSE COMMAND LINE ARGUMENTS
         if (args.length != 2) {
-            throw new IllegalArgumentException("wrong number of arguments, needs to be 2, is: "+args.length);
+            throw new IllegalArgumentException("wrong number of arguments, needs to be 2, is: " + args.length);
         }
 
         String testClass; // name of class to be submitted
@@ -103,6 +105,9 @@ public class App {
         // INITIALIZE SPARK STREAMING AND PREPARE SHARED VARIABLES IN ALL TESTS
         JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0); // accumulator used for performance monitoring in all tests
+        Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
+        Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific
+        Accumulator<Map<String, Integer>> ipOccurrences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
 
         // START STREAMING WITH PROVIDED TEST CLASS AS ARGUMENT
         switch (testClass) {
@@ -115,15 +120,51 @@ public class App {
                 break;
             }
             case "CountTest": {
-                Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0);
                 messages.foreachRDD(new CountTest(processedRecordsCounter, filteredIpCount));
+                break;
+            }
+            case "AggregationTest": {
+                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
+                break;
+            }
+            case "TopNTest": {
+                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
+                break;
+            }
+            case "SynScanTest": {
+                messages.foreachRDD(new SynScanTest(processedRecordsCounter, ipOccurrences));
+                break;
+            }
+            case "Undefined": {
+                throw new IllegalArgumentException("test class name was not properly passed as argument");
+            }
+            default: {
+                throw new IllegalArgumentException("test class name does not exist: " + testClass);
+            }
+        }
 
-                new Thread(() -> { // regular check for data set finish
-                    while (true) {
-                        Integer processedRecords = processedRecordsCounter.value();
-                        if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+        // REGULAR CHECK FOR DATA SET FINISH AND TEST POST PROCESSING, PERFORMANCE MEASUREMENT
+        new Thread(() -> {
+            Long min = 0L;
+            Long max = 0L;
+            LocalDateTime startDateTime = LocalDateTime.now();
+            boolean finished = false;
+            int step = 0; // on 10 measurements are printed
+            while (!finished) {
+                Integer processedRecords = processedRecordsCounter.value();
+                if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                    final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
+                    switch (testClass) {
+                        case "ReadWriteTest": {
+                            System.out.println(testInfo);
+                            break;
+                        }
+                        case "FilterIPTest": {
+                            System.out.println(testInfo);
+                            break;
+                        }
+                        case "CountTest": {
                             final String result = "IP: " + FILTER_TEST_IP + ", amount of packets: " + filteredIpCount.value();
-                            final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
                             List<String> testResults = new ArrayList<>();
                             testResults.add(testInfo);
                             testResults.add(result);
@@ -133,45 +174,13 @@ public class App {
                             System.out.println(testInfo);
                             break;
                         }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            System.out.println(e.getLocalizedMessage());
-                        }
-                    }
-                }).start();
-                break;
-            }
-            case "AggregationTest": {
-                Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
-                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
-
-                new Thread(() -> { // regular check for data set finish
-                    while (true) {
-                        Integer processedRecords = processedRecordsCounter.value();
-                        if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                        case "AggregationTest": {
                             // kafka consumer gets a map with dst IPs and the sums of packets
-                            prod.send(new Tuple2<>(null, ipPackets.value().toString()));
-                            System.out.println("Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
+                            ipPackets.value().forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
+                            System.out.println(testInfo);
                             break;
                         }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            System.out.println(e.getLocalizedMessage());
-                        }
-                    }
-                }).start();
-                break;
-            }
-            case "TopNTest": {
-                Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
-                messages.foreachRDD(new AggregationTest(processedRecordsCounter, ipPackets));
-
-                new Thread(() -> { // regular check for data set finish
-                    while (true) {
-                        Integer processedRecords = processedRecordsCounter.value();
-                        if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                        case "TopNTest": {
                             Map<String, Integer> total = ipPackets.value();
                             // sort map by values
                             MapValueComparator valueComparator = new MapValueComparator(total);
@@ -193,78 +202,48 @@ public class App {
                             }
                             // kafka consumer gets a list of triplets with position, ip and packet count
                             prod.send(new Tuple2<>(null, topElements.toString()));
-                            System.out.println("Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
+                            System.out.println(testInfo);
+                            break;
                         }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            System.out.println(e.getLocalizedMessage());
-                        }
-                    }
-                }).start();
-                break;
-            }
-            case "SynScanTest": {
-                Accumulator<Map<String, Integer>> ipOccurrences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
-                messages.foreachRDD(new SynScanTest(processedRecordsCounter, ipOccurrences));
-
-                new Thread(() -> { // regular check for data set finish
-                    while (true) {
-                        Integer processedRecords = processedRecordsCounter.value();
-                        if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                        case "SynScanTest": {
                             Map<String, Integer> total = ipOccurrences.value();
                             System.out.println("all_current: " + total.size());
                             SynScanTest.filterMap(total);
                             System.out.println("after filtering: " + total.size());
                             prod.send(new Tuple2<>(null, total.toString()));
-                            System.out.println("Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
+                            System.out.println(testInfo);
                             break;
                         }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            System.out.println(e.getLocalizedMessage());
+                        default: {
+                            break;
                         }
                     }
-                }).start();
-                break;
-            }
-            case "Undefined": {
-                throw new IllegalArgumentException("test class name was not properly passed as argument");
-            }
-            default: {
-                throw new IllegalArgumentException("test class name does not exist: " + testClass);
-            }
-        }
-
-        // PERFORMANCE MEASUREMENT
-        new Thread(() -> { // Updates min and max processed records rate with average that is taken every 5 seconds.
-            Long min = 0L;
-            Long max = 0L;
-            LocalDateTime startDateTime = LocalDateTime.now();
-            while (true) {
-                Integer processedRecords = processedRecordsCounter.value();
-                if (processedRecords > 0) {
-                    Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
-                    if (processingTimeInMillis >= 10000) { // give spark some time to start processing records
-                        Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
-                        if (min == 0L) {
-                            min = averageSpeed;
+                    finished = true;
+                } else {
+                    // Updates min and max processed records rate with average that is taken every 5 seconds if test is still running
+                    if (processedRecords > 0 && (step % 10) == 0) {
+                        Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
+                        if (processingTimeInMillis >= 10000) { // give spark some time to start processing records
+                            Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
+                            if (min == 0L) {
+                                min = averageSpeed;
+                            }
+                            if (averageSpeed > max) {
+                                max = averageSpeed;
+                            }
+                            if (averageSpeed < min) {
+                                min = averageSpeed;
+                            }
+                            System.out.println(processedRecords);
+                            System.out.println("avg speed: " + averageSpeed + " records/s");
+                            System.out.println("min speed: " + min + " records/s");
+                            System.out.println("max speed: " + max + " records/s");
                         }
-                        if (averageSpeed > max) {
-                            max = averageSpeed;
-                        }
-                        if (averageSpeed < min) {
-                            min = averageSpeed;
-                        }
-                        System.out.println(processedRecords);
-                        System.out.println("avg speed: " + averageSpeed + " records/s");
-                        System.out.println("min speed: " + min + " records/s");
-                        System.out.println("max speed: " + max + " records/s");
                     }
+                    step++;
                 }
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     System.out.println(e.getLocalizedMessage());
                 }
@@ -274,7 +253,7 @@ public class App {
         jssc.start();
         jssc.awaitTermination();
     }
-    
+
     private static void printTestResult(String filename, List<String> resultLines) {
         try {
             PrintWriter pw = new PrintWriter(filename);
