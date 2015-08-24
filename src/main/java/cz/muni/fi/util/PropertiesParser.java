@@ -39,4 +39,19 @@ public class PropertiesParser {
         }
         return prop;
     }
+
+    /**
+     * Parsers src/main/resources/application.properties file into java.util.Properties object.
+     *
+     * @return java.util.Properties parsed properties
+     */
+    public static Properties getApplicationProperties() {
+        Properties prop = new Properties();
+        try (InputStream input = PropertiesParser.class.getClassLoader().getResourceAsStream("application.properties")) {
+            prop.load(input);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return prop;
+    }
 }

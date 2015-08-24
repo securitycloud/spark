@@ -44,7 +44,6 @@
         <!-- command line arguments defaults -->
         <spark.machines>Undefined</spark.machines>
         <spark.testtype>Undefined</spark.testtype>
-        <spark.filter></spark.filter> <!-- I think we do not need this anymore -->
     </properties>
 
     <dependencies>

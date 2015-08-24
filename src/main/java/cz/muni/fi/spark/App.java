@@ -6,6 +6,8 @@ import cz.muni.fi.kafka.OutputProducer;
 import cz.muni.fi.spark.accumulators.MapAccumulator;
 import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import kafka.serializer.StringDecoder;
 import kafka.utils.ZkUtils;
 import org.apache.commons.cli.MissingArgumentException;
@@ -70,6 +72,7 @@ public class App {
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
         final SparkConf sparkConf = getSparkConf();
         final Properties kafkaProps = PropertiesParser.getKafkaProperties();
+        final Properties applicationProps = PropertiesParser.getApplicationProperties();
         final JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(SPARK_STREAMING_BATCH_INTERVAL));
 
         // INITIALIZE SPARK KAFKA STREAMS
@@ -119,9 +122,15 @@ public class App {
                     while (true) {
                         Integer processedRecords = processedRecordsCounter.value();
                         if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                            final String result = "IP: " + FILTER_TEST_IP + ", amount of packets: " + filteredIpCount.value();
+                            final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
+                            List<String> testResults = new ArrayList<>();
+                            testResults.add(testInfo);
+                            testResults.add(result);
                             // kafka consumer gets a message with IP and the sum of packets
-                            prod.send(new Tuple2<>(null, "IP: " + FILTER_TEST_IP + ", amount of packets: " + filteredIpCount.value()));
-                            System.out.println("Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
+                            prod.send(new Tuple2<>(null, result));
+                            //printTestResult(applicationProps.getProperty("application.resultsFile"), testResults);
+                            System.out.println(testInfo);
                             break;
                         }
                         try {
@@ -264,6 +273,18 @@ public class App {
 
         jssc.start();
         jssc.awaitTermination();
+    }
+    
+    private static void printTestResult(String filename, List<String> resultLines) {
+        try {
+            PrintWriter pw = new PrintWriter(filename);
+            for (String resultLine : resultLines) {
+                pw.append(resultLine + "\r\n");
+            }
+            pw.close();
+        } catch (FileNotFoundException ex) {
+
+        }
     }
 
     /**
