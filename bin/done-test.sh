@@ -8,7 +8,7 @@ echo -e $LOG Waiting for finish test $OFF
 # UNTIL TEST HAS BEEN DONE
 while [ true ]
 do
-    DONE=true
+    DONE=false
 
     bin/result-download.sh > /tmp/done-test
     tac /tmp/done-test > /tmp/done-test-revert
