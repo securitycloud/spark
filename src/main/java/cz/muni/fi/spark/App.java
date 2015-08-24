@@ -154,7 +154,8 @@ public class App {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
-                    final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
+                    final String testInfo = LocalDateTime.now().toString() + ": " + testClass + ": " + 
+                            machinesCount + " machines / " + kafkaStreamsCount + " kafka streams.";
                     
                     switch (testClass) {
                         case "ReadWriteTest": {
@@ -214,11 +215,12 @@ public class App {
                     // common for all tests: print test info to console and test info + performance info to kafka
                     Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
                     Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
-                    final String performanceResult = String.format("Processed records: %s. Speed: min/max/avg : %n/%n/%n rec/s", 
-                            processedRecords, min, max, averageSpeed);
+                    final String performanceResult = String.format("Speed (min/max/avg): %s | %s | %s rec/s. Processed records: %s.", 
+                            min, max, averageSpeed, processedRecords);
                     
                     System.out.println(testInfo);
-                    printTestResult(resultsTopic, null, Arrays.asList(testInfo, performanceResult));
+                    System.out.println(performanceResult);
+                    printTestResult(resultsTopic, null, Arrays.asList(testInfo + " " + performanceResult));
                     
                     finished = true;
                 } else {
