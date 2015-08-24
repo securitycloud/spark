@@ -153,31 +153,30 @@ public class App {
             while (!finished) {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
+                    final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
                     final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
+                    
+                    Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
+                    Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
+                    final String performanceResult = String.format("Processed records: %s. Speed: min/max/avg : %n/%n/%n rec/s", 
+                            processedRecords, min, max, averageSpeed);
+                    
                     switch (testClass) {
                         case "ReadWriteTest": {
-                            System.out.println(testInfo);
                             break;
                         }
                         case "FilterIPTest": {
-                            System.out.println(testInfo);
                             break;
                         }
                         case "CountTest": {
                             final String result = "IP: " + FILTER_TEST_IP + ", amount of packets: " + filteredIpCount.value();
-                            List<String> testResults = new ArrayList<>();
-                            testResults.add(testInfo);
-                            testResults.add(result);
                             // kafka consumer gets a message with IP and the sum of packets
                             prod.send(new Tuple2<>(null, result));
-                            //printTestResult(applicationProps.getProperty("application.resultsFile"), testResults);
-                            System.out.println(testInfo);
                             break;
                         }
                         case "AggregationTest": {
                             // kafka consumer gets a map with dst IPs and the sums of packets
                             ipPackets.value().forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
-                            System.out.println(testInfo);
                             break;
                         }
                         case "TopNTest": {
@@ -202,7 +201,6 @@ public class App {
                             }
                             // kafka consumer gets a list of triplets with position, ip and packet count
                             prod.send(new Tuple2<>(null, topElements.toString()));
-                            System.out.println(testInfo);
                             break;
                         }
                         case "SynScanTest": {
@@ -211,13 +209,17 @@ public class App {
                             SynScanTest.filterMap(total);
                             System.out.println("after filtering: " + total.size());
                             prod.send(new Tuple2<>(null, total.toString()));
-                            System.out.println(testInfo);
                             break;
                         }
                         default: {
                             break;
                         }
                     }
+                    
+                    // common for all tests: print test info to console and test info + performance info to kafka
+                    System.out.println(testInfo);
+                    printTestResult(resultsTopic, null, Arrays.asList(testInfo, performanceResult));
+                    
                     finished = true;
                 } else {
                     // Updates min and max processed records rate with average that is taken every 5 seconds if test is still running
@@ -254,15 +256,30 @@ public class App {
         jssc.awaitTermination();
     }
 
-    private static void printTestResult(String filename, List<String> resultLines) {
-        try {
-            PrintWriter pw = new PrintWriter(filename);
-            for (String resultLine : resultLines) {
-                pw.append(resultLine + "\r\n");
-            }
-            pw.close();
-        } catch (FileNotFoundException ex) {
+    /**
+     * Save test results to a file or send to kafka according to passed parameters
+     * 
+     * @param kafkaTopic name of Kafka topic
+     * @param filename filename to be written to
+     * @param resultLines list of lines with results to be saved
+     */
+    private static void printTestResult(String kafkaTopic, String filename, List<String> resultLines) {
+        if (filename != null) {
+            try {
+                PrintWriter pw = new PrintWriter(filename);
+                for (String resultLine : resultLines) {
+                    pw.append(resultLine + "\r\n");
+                }
+                pw.close();
+            } catch (FileNotFoundException ex) {
 
+            }
+        }
+        
+        if (kafkaTopic != null) {
+            for (String resultLine : resultLines) {
+                prod.send(new Tuple2<>(null, resultLine), kafkaTopic);
+            }
         }
     }
 

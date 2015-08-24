@@ -44,6 +44,8 @@
         <!-- command line arguments defaults -->
         <spark.machines>Undefined</spark.machines>
         <spark.testtype>Undefined</spark.testtype>
+        <application.resultsTopic>sparkResults</application.resultsTopic>
+        <application.resultsFile>/root/mjelinek/sparkresults/results.txt</application.resultsFile>
     </properties>
 
     <dependencies>
@@ -84,21 +86,6 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_${scala.binary.version}</artifactId>
             <version>${kafka.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.1.3</version>
         </dependency>
     </dependencies>
 

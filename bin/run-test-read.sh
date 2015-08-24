@@ -14,7 +14,7 @@ then
     echo -e $ERR You must specify Number of computers $OFF
     exit 2;
 fi
-COMPUTERS=$3
+COMPUTERS=$2
 
 if [ -z "$3" ] 
 then
