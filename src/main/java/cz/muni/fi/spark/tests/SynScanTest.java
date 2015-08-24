@@ -55,7 +55,7 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
                     }
                     tempCount++;
                 }
-                ipOccurrences.add(filterMap(tempIpOccurences));
+                ipOccurrences.add(filterMap(tempIpOccurences, 1));
                 processedRecordsCounter.add(tempCount);
             }
         });
@@ -66,13 +66,14 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
      * Takes a map of ip addresses and their occurrences and removes elements with less than 11 occurrences
      *
      * @param map map to be filtered
+     * @param value value that the flow count is discarded if its lees than or equal to
      * @return filtered map
      */
-    public static Map<String, Integer> filterMap(Map<String, Integer> map) {
+    public static Map<String, Integer> filterMap(Map<String, Integer> map, Integer value) {
         Iterator it = map.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, Integer> pair = (Map.Entry<String, Integer>) it.next();
-            if (pair.getValue() <= 10) {
+            if (pair.getValue() <= value) {
                 it.remove(); // avoids a ConcurrentModificationException
             }
         }

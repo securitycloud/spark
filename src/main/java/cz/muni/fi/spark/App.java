@@ -202,11 +202,8 @@ public class App {
                             break;
                         }
                         case "SynScanTest": {
-                            Map<String, Integer> total = ipOccurrences.value();
-                            System.out.println("all_current: " + total.size());
-                            SynScanTest.filterMap(total);
-                            System.out.println("after filtering: " + total.size());
-                            prod.send(new Tuple2<>(null, total.toString()));
+                            Map<String, Integer> filtered = SynScanTest.filterMap(ipOccurrences.value(), 10);
+                            filtered.forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
                             break;
                         }
                         default: {
