@@ -156,11 +156,6 @@ public class App {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
                     final String testInfo = "Finished test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.";
                     
-                    Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
-                    Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
-                    final String performanceResult = String.format("Processed records: %s. Speed: min/max/avg : %n/%n/%n rec/s", 
-                            processedRecords, min, max, averageSpeed);
-                    
                     switch (testClass) {
                         case "ReadWriteTest": {
                             break;
@@ -217,6 +212,11 @@ public class App {
                     }
                     
                     // common for all tests: print test info to console and test info + performance info to kafka
+                    Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
+                    Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
+                    final String performanceResult = String.format("Processed records: %s. Speed: min/max/avg : %n/%n/%n rec/s", 
+                            processedRecords, min, max, averageSpeed);
+                    
                     System.out.println(testInfo);
                     printTestResult(resultsTopic, null, Arrays.asList(testInfo, performanceResult));
                     
