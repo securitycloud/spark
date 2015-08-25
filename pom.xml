@@ -20,7 +20,7 @@
         <fastutil.version>7.0.7</fastutil.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>100.64.25.107:2181</kafka.consumer.zookeeper.url>
-        <kafka.consumer.topic>36m</kafka.consumer.topic>
+        <kafka.consumer.topic>dataset</kafka.consumer.topic>
         <kafka.producer.topic>sparkOut</kafka.producer.topic>
         <kafka.producer.servers>100.64.25.107:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
@@ -33,9 +33,9 @@
         <spark.master>spark://sc1:7077</spark.master>
         <spark.app.name>${project.artifactId}</spark.app.name>
         <spark.ui.port>4040</spark.ui.port>
-        <spark.driver.memory>24576mb</spark.driver.memory>
+        <spark.driver.memory>65536mb</spark.driver.memory>
         <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
-        <spark.executor.memory>24576mb</spark.executor.memory>
+        <spark.executor.memory>65536mb</spark.executor.memory>
         <spark.driver.cores>4</spark.driver.cores>
         <spark.default.parallelism>8</spark.default.parallelism>
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>

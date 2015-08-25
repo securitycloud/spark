@@ -44,7 +44,7 @@ public class CountTest implements Function<JavaPairRDD<String, String>, Void> {
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
                     if (flow.getDst_ip_addr().equals(FILTERED_IP)) {
-                        tempFilteredCount++;
+                        tempFilteredCount += flow.getPackets();
                     }
                     tempCount++;
                 }
