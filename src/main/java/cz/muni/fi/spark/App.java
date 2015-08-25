@@ -151,9 +151,14 @@ public class App {
             Long max = 0L;
             LocalDateTime startDateTime = LocalDateTime.now();
             boolean finished = false;
+            boolean receivedData = false;
             int step = 0; // on 10 measurements are printed
             while (!finished) {
                 Integer processedRecords = processedRecordsCounter.value();
+                if (!receivedData && processedRecords > 0) {
+                    receivedData = true;
+                    startDateTime = LocalDateTime.now();
+                }
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
                     final String testInfo = LocalDateTime.now().format(formatter) + " " + testClass + " [" +
