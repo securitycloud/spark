@@ -11,7 +11,7 @@ fi
 SERVER=$1
 
 # download and extract spark, prepare folder for project copy
-ssh root@$SERVER "
+ssh $SERVER "
     cd $WRK
     wget -q $URL_SPARK -O spark.tgz
     mkdir spark-bin-hadoop

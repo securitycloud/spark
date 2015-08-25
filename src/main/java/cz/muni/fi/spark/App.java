@@ -63,7 +63,7 @@ public class App {
             if (machinesCount < 3) {
                 throw new IllegalArgumentException("argument with number of machines needs to be greater or equal 3, is: " + args[1]);
             }
-            kafkaStreamsCount = machinesCount - 2;
+            kafkaStreamsCount = machinesCount;
             // Optimization: streamsCount = (machinesCount/2)? check how many executors are working and if the input rate of Kafka gets processed fast enough
         } catch (ArrayIndexOutOfBoundsException ex) {
             throw new MissingArgumentException("missing argument: 'machinesCount'");
@@ -80,7 +80,7 @@ public class App {
 
         // INITIALIZE SPARK KAFKA STREAMS
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
-        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + machinesCount + "part", 1); // topic, numThreads
+        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + (machinesCount) + "part", 1); // topic, numThreads
 
         Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
         for (String key : kafkaProps.stringPropertyNames()) {

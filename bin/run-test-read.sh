@@ -35,7 +35,7 @@ echo -e $LOG Recreating output topic $TESTING_TOPIC with 1 partitions on $KAFKA_
 bin/run-topic.sh $TESTING_TOPIC 1 $KAFKA_CONSUMER
 
 #echo -e $LOG Logging info to service topic: $SERVICE_TOPIC $OFF
-#ssh root@$KAFKA_CONSUMER "
+#ssh $KAFKA_CONSUMER "
 #    echo Type=read, Filter=$FILTER, Computers=$COMPUTERS, Partitions=$PARTITIONS, BatchSize=$BATCH_SIZE |
 #        $KAFKA_INSTALL/bin/kafka-console-producer.sh --topic $SERVICE_TOPIC --broker-list localhost:9092
 #"
@@ -51,7 +51,7 @@ SERVERS=${ALL_SERVERS[@]}
 # compile and run, then scp to all slave nodes
 NUMBER_OF_SLAVES=$((COMPUTERS - 1))
 
-ssh root@${ALL_SERVERS[1]} "
+ssh ${ALL_SERVERS[1]} "
 	cd ${WRK}
 	rm -rf project/
 	mkdir project
@@ -89,7 +89,7 @@ ssh root@${ALL_SERVERS[1]} "
 bin/done-test.sh
 #sleep 120
 
-ssh root@${ALL_SERVERS[1]} "
+ssh ${ALL_SERVERS[1]} "
 	cd ${WRK}
         DRIVERID=$(</root/spark/driverId.txt)
         $WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}

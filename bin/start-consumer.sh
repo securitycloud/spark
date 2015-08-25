@@ -7,7 +7,7 @@ then
     exit 1;
 fi
 
-ssh root@$KAFKA_CONSUMER "
+ssh $KAFKA_CONSUMER "
 	cd kafka/kafka_2.11-0.8.2.1
 	bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic $1 --from-beginning
 "

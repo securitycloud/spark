@@ -12,8 +12,8 @@ TESTTYPES[5]=TopNTest
 TESTTYPES[6]=SynScanTest
 
 COMPUTERS[1]=5
-COMPUTERS[2]=3
-#COMPUTERS[3]=1
+COMPUTERS[2]=4
+COMPUTERS[3]=3
 
 REPEAT=5
 
@@ -39,8 +39,9 @@ do
         #bin/run-topic.sh $TESTING_TOPIC $PC $KAFKA_PRODUCER
 
         #bin/run-input.sh $BS
-
+        bin/kill-cluster.sh
         NUMBER_OF_SLAVES=$((PC - 1))
+        bin/start-cluster.sh
 
         for i in `seq 1 $REPEAT`
         do

@@ -19,33 +19,33 @@
         <kafka.version>0.8.2.1</kafka.version>
         <fastutil.version>7.0.7</fastutil.version>
         <!-- Kafka -->
-        <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
+        <kafka.consumer.zookeeper.url>100.64.25.107:2181</kafka.consumer.zookeeper.url>
         <kafka.consumer.topic>36m</kafka.consumer.topic>
-        <kafka.producer.topic>testout</kafka.producer.topic>
-        <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
+        <kafka.producer.topic>sparkOut</kafka.producer.topic>
+        <kafka.producer.servers>100.64.25.107:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
         <kafka.producer.client.id>my-producer</kafka.producer.client.id>
         <kafka.producer.auto.offset.reset>largest</kafka.producer.auto.offset.reset>
         <kafka.producer.batch.size>5000</kafka.producer.batch.size>
         <!-- Spark -->
-        <spark.home>/root/spark/spark-bin-hadoop</spark.home>
-        <spark.master>spark://sc-211:7077</spark.master>
+        <spark.home>/home/securitycloud/spark/spark-bin-hadoop</spark.home>
+        <spark.master>spark://sc1:7077</spark.master>
         <spark.app.name>${project.artifactId}</spark.app.name>
         <spark.ui.port>4040</spark.ui.port>
-        <spark.driver.memory>2500mb</spark.driver.memory>
+        <spark.driver.memory>24576mb</spark.driver.memory>
         <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
-        <spark.executor.memory>2500mb</spark.executor.memory>
-        <spark.driver.cores>2</spark.driver.cores>
+        <spark.executor.memory>24576mb</spark.executor.memory>
+        <spark.driver.cores>4</spark.driver.cores>
         <spark.default.parallelism>8</spark.default.parallelism>
         <spark.serializer>org.apache.spark.serializer.KryoSerializer</spark.serializer>
         <!-- start receiving all messages from topic start -->
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
         <!-- command line arguments defaults -->
-        <spark.machines>Undefined</spark.machines>
-        <spark.testtype>Undefined</spark.testtype>
+        <spark.machines>5</spark.machines>
+        <spark.testtype>CountTest</spark.testtype>
         <application.resultsTopic>sparkResults</application.resultsTopic>
-        <application.resultsFile>/root/mjelinek/sparkresults/results.txt</application.resultsFile>
+        <application.resultsFile>/home/securitycloud/spark/sparkresults/results.txt</application.resultsFile>
     </properties>
 
     <dependencies>

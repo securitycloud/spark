@@ -5,7 +5,7 @@
 # kill all java processes on all machines
 for i in "${ALL_SERVERS[@]}"
 do
-	ssh root@$i " 
+	ssh $i " 
 		killall java
 		"
 done

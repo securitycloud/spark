@@ -15,6 +15,6 @@ KAFKA_JAR=$WRK/kafka/kafka-filip/target/kafka-filip-1.0-SNAPSHOT-jar-with-depend
 echo -e $LOG Start producing flows on $KAFKA_PRODUCER $OFF
 
 # PRODUCING FLOWS
-ssh root@$KAFKA_PRODUCER "
+ssh $KAFKA_PRODUCER "
     java -jar $KAFKA_JAR $BATCH_SIZE
 "
