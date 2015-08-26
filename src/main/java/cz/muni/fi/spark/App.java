@@ -34,8 +34,8 @@ import java.util.*;
 public class App {
 
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
-    static final int TEST_DATA_RECORDS_SIZE = 36846558; // total amount of events in our data set, indicates test end
-    static final String FILTER_TEST_IP = "62.148.241.49"; // used for FilterIPTest only
+    //static final int TEST_DATA_RECORDS_SIZE = 200_000_000; // total amount of events in our data set, indicates test end
+    static final String FILTER_TEST_IP = "141.57.244.116";
 
     private static final OutputProducer prod = new OutputProducer();
 
@@ -71,6 +71,10 @@ public class App {
             throw new IllegalArgumentException("argument with number of machines needs to be a number");
         }
         System.out.println("Started test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
+        
+        // TODO: this should be correct after we have correct data in kafka
+        //final int TEST_DATA_RECORDS_SIZE = 40_000_000 * machinesCount;
+        final int TEST_DATA_RECORDS_SIZE = 39_750_000 * machinesCount;
 
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
         final SparkConf sparkConf = getSparkConf();
@@ -117,11 +121,11 @@ public class App {
                 break;
             }
             case "FilterIPTest": {
-                messages.foreachRDD(new FilterIPTest(FILTER_TEST_IP, processedRecordsCounter));
+                messages.foreachRDD(new FilterIPTest(FILTER_TEST_IP, processedRecordsCounter, filteredIpCount));
                 break;
             }
             case "CountTest": {
-                messages.foreachRDD(new CountTest(processedRecordsCounter, filteredIpCount));
+                messages.foreachRDD(new CountTest(FILTER_TEST_IP, processedRecordsCounter, filteredIpCount));
                 break;
             }
             case "AggregationTest": {
@@ -157,7 +161,7 @@ public class App {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (!receivedData && processedRecords > 0) {
                     receivedData = true;
-                    startDateTime = LocalDateTime.now();
+                    startDateTime = LocalDateTime.now().minusSeconds(SPARK_STREAMING_BATCH_INTERVAL / 1000);
                 }
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
@@ -166,9 +170,16 @@ public class App {
                     
                     switch (testClass) {
                         case "ReadWriteTest": {
+                            final String result = "Amount of flows: " + processedRecords;
+                            // kafka consumer total sum of flows
+                            prod.send(new Tuple2<>(null, result));
                             break;
                         }
                         case "FilterIPTest": {
+                            final String result = "IP: " + FILTER_TEST_IP + ", amount of flows: " + filteredIpCount.value() +
+                                    ", filter ratio: " + ((float)filteredIpCount.value() / processedRecords);
+                            // kafka consumer gets a message with IP and the sum of flows
+                            prod.send(new Tuple2<>(null, result));
                             break;
                         }
                         case "CountTest": {
@@ -178,7 +189,7 @@ public class App {
                             break;
                         }
                         case "AggregationTest": {
-                            // kafka consumer gets a map with dst IPs and the sums of packets
+                            // kafka consumer gets a map with src IPs and the sums of packets
                             ipPackets.value().forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
                             break;
                         }
@@ -208,6 +219,7 @@ public class App {
                         }
                         case "SynScanTest": {
                             Map<String, Integer> filtered = SynScanTest.filterMap(ipOccurrences.value(), 10);
+                            // TODO: sort and do top N (100?)
                             filtered.forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
                             break;
                         }

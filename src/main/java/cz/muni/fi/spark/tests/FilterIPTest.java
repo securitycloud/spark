@@ -13,25 +13,29 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Access every message read, convert to json and check if IP matches, if yes, then send it to Kafka Output.
+ * Access every message read, convert to json and check if IP matches, if yes, increase filter counter
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
 public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void> {
-    private static final OutputProducer prod = new OutputProducer();
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private String filterDstIp;
-    private Accumulator<Integer> processedRecordsCounter;
+    private final String filterSrcIp;
+    private final Accumulator<Integer> processedRecordsCounter;
+    private final Accumulator<Integer> filteredIpCount;
+    
 
     /**
      * Initializes FilterIP test class with passed Accumulator.
      *
+     * @param filterSrcIp             source IP that has to match
      * @param processedRecordsCounter Accumulator with total of processed records
-     * @param filterDstIp             destination ip that has to match
+     * @param filteredIpCount Accumulator with total of IP addresses matched
      */
-    public FilterIPTest(String filterDstIp, Accumulator<Integer> processedRecordsCounter) {
-        this.filterDstIp = filterDstIp;
+    public FilterIPTest(String filterSrcIp, Accumulator<Integer> processedRecordsCounter,
+            Accumulator<Integer> filteredIpCount) {
+        this.filterSrcIp = filterSrcIp;
         this.processedRecordsCounter = processedRecordsCounter;
+        this.filteredIpCount = filteredIpCount;
     }
 
     @Override
@@ -40,15 +44,17 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
                 Integer tempCount = 0;
+                Integer tempFilteredCount = 0;
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
-                    if (flow.getDst_ip_addr().equals(filterDstIp)) {
-                        prod.send(new Tuple2<>(null, flow.toString()));
+                    if (flow.getSrc_ip_addr().equals(filterSrcIp)) {
+                        tempFilteredCount++;
                     }
                     tempCount++;
                 }
                 processedRecordsCounter.add(tempCount);
+                filteredIpCount.add(tempFilteredCount);
             }
         });
         return null;

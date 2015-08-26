@@ -33,7 +33,7 @@
         <spark.master>spark://sc1:7077</spark.master>
         <spark.app.name>${project.artifactId}</spark.app.name>
         <spark.ui.port>4040</spark.ui.port>
-        <spark.driver.memory>65536mb</spark.driver.memory>
+        <spark.driver.memory>32768mb</spark.driver.memory>
         <!-- Amount of memory to use for the driver process, this config must not be set through the SparkConf directly -->
         <spark.executor.memory>65536mb</spark.executor.memory>
         <spark.driver.cores>4</spark.driver.cores>

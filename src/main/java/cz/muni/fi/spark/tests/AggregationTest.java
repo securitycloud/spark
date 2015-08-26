@@ -14,15 +14,15 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Computes a key value map with dst IP addresses and the amount of their packets in the stream.
+ * Computes a key value map with src IP addresses and the amount of their packets in the stream.
  * At the end, merges the map with shared accumulator map of all occurrences.
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
 public class AggregationTest implements Function<JavaPairRDD<String, String>, Void> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private Accumulator<Integer> processedRecordsCounter;
-    private Accumulator<Map<String, Integer>> ipPackets;
+    private final Accumulator<Integer> processedRecordsCounter;
+    private final Accumulator<Map<String, Integer>> ipPackets;
 
     /**
      * Initializes Aggregation test class with passed Accumulators.
@@ -45,10 +45,10 @@ public class AggregationTest implements Function<JavaPairRDD<String, String>, Vo
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
                     Flow flow = mapper.readValue(msg._2(), Flow.class);
-                    if (!tempIpPackets.containsKey(flow.getDst_ip_addr())) { // put in new key
-                        tempIpPackets.put(flow.getDst_ip_addr(), flow.getPackets());
+                    if (!tempIpPackets.containsKey(flow.getSrc_ip_addr())) { // put in new key
+                        tempIpPackets.put(flow.getSrc_ip_addr(), flow.getPackets());
                     } else { // increment existing value
-                        tempIpPackets.put(flow.getDst_ip_addr(), tempIpPackets.get(flow.getDst_ip_addr()) + flow.getPackets());
+                        tempIpPackets.put(flow.getSrc_ip_addr(), tempIpPackets.get(flow.getSrc_ip_addr()) + flow.getPackets());
                     }
                     tempCount++;
                 }

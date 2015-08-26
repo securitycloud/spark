@@ -11,13 +11,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Access every message read and send it to Kafka Output.
+ * Access every message read
  * At the end, shared accumulator values are updated from the executor results.
  */
 public class ReadWriteTest implements Function<JavaPairRDD<String, String>, Void> {
-    private static final OutputProducer prod = new OutputProducer();
 
-    private Accumulator<Integer> processedRecordsCounter;
+    private final Accumulator<Integer> processedRecordsCounter;
 
     /**
      * Initializes ReadWrite test class with passed Accumulator.
@@ -36,7 +35,6 @@ public class ReadWriteTest implements Function<JavaPairRDD<String, String>, Void
                 Integer tempCount = 0;
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();
-                    prod.send(msg);
                     tempCount++;
                 }
                 processedRecordsCounter.add(tempCount);
