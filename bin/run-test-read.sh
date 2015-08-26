@@ -82,7 +82,7 @@ ssh root@${ALL_SERVERS[1]} "
         	echo copying slave node to ${ALL_SERVERS[5]}
             scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[5]}:$WRK/project/target
         fi
-	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /root/spark/driverId.txt
+	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > ${WRK}/driverId.txt
 "
 
 
@@ -91,6 +91,6 @@ bin/done-test.sh
 
 ssh root@${ALL_SERVERS[1]} "
 	cd ${WRK}
-        DRIVERID=$(</root/spark/driverId.txt)
-        $WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}
+	DRIVERID=$(</root/spark/driverId.txt)
+	$WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}
 "

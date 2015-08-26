@@ -23,10 +23,6 @@ NUM_TESTS=$((NUM_TESTS * ${#COMPUTERS[@]}))
 NUM_TESTS=$((NUM_TESTS * ${REPEAT}))
 ACT_TEST=1
 
-bin/kill-cluster.sh
-#bin/clean-cluster.sh
-#bin/install-cluster.sh
-bin/start-cluster.sh
 
 echo -e $LOG Recreating input topic $SERVICE_TOPIC on $KAFKA_CONSUMER $OFF
 bin/run-topic.sh $SERVICE_TOPIC 1 $KAFKA_CONSUMER
@@ -39,8 +35,10 @@ do
         #bin/run-topic.sh $TESTING_TOPIC $PC $KAFKA_PRODUCER
 
         #bin/run-input.sh $BS
+        SLAVES_COUNT=$((PC - 1))
+        sed -i "6s/.*/NUMBER_OF_SLAVES=${SLAVES_COUNT}/" bin/setenv.sh
+        bin/restart-cluster.sh
 
-        NUMBER_OF_SLAVES=$((PC - 1))
 
         for i in `seq 1 $REPEAT`
         do

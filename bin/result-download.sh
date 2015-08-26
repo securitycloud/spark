@@ -2,7 +2,7 @@
 
 . bin/setenv.sh
 
-KAFKA_JAR=$WRK/kafka/kafka-filip/target/kafka-filip-1.0-SNAPSHOT-jar-with-dependencies.jar
+KAFKA_JAR=../kafka/kafka-filip/target/kafka-filip-1.0-SNAPSHOT-jar-with-dependencies.jar
 
 
 # DOWNLOAD RESULTS
