@@ -45,7 +45,6 @@
         <spark.machines>5</spark.machines>
         <spark.testtype>SynScanTest</spark.testtype>
         <application.resultsTopic>sparkResults</application.resultsTopic>
-        <application.resultsFile>/home/securitycloud/spark/sparkresults/results.txt</application.resultsFile>
     </properties>
 
     <dependencies>

@@ -34,7 +34,7 @@ import java.util.*;
 public class App {
 
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
-    static final int TEST_DATA_RECORDS_PER_PARTITION = 100_000;
+    static final int TEST_DATA_RECORDS_PER_PARTITION = 40_000_000;
     //static final int TEST_DATA_RECORDS_SIZE = 200_000_000; // total amount of events in our data set, indicates test end
     static final String FILTER_TEST_IP = "141.57.244.116";
 
@@ -73,7 +73,7 @@ public class App {
         }
         System.out.println("Started test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
 
-        final int TEST_DATA_RECORDS_SIZE = TEST_DATA_RECORDS_PER_PARTITION * 100;
+        final int TEST_DATA_RECORDS_SIZE = TEST_DATA_RECORDS_PER_PARTITION * machinesCount;
 
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
         final SparkConf sparkConf = getSparkConf();
@@ -83,7 +83,7 @@ public class App {
 
         // INITIALIZE SPARK KAFKA STREAMS
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
-        topicMap.put(kafkaProps.getProperty("consumer.topic")/* + "-" + (machinesCount) + "part"*/, 1); // topic, numThreads
+        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + (machinesCount) + "part", 1); // topic, numThreads
 
         Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
         for (String key : kafkaProps.stringPropertyNames()) {

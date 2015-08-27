@@ -30,9 +30,9 @@ then
 fi
 BATCH_SIZE=$4
 
-
-echo -e $LOG Recreating output topic $TESTING_TOPIC with 1 partitions on $KAFKA_CONSUMER $OFF
-bin/run-topic.sh $TESTING_TOPIC 1 $KAFKA_CONSUMER
+#recreating of topic
+#echo -e $LOG Recreating output topic $TESTING_TOPIC with 1 partitions on $KAFKA_CONSUMER $OFF
+#bin/run-topic.sh $TESTING_TOPIC 1 $KAFKA_CONSUMER
 
 #echo -e $LOG Logging info to service topic: $SERVICE_TOPIC $OFF
 #ssh $KAFKA_CONSUMER "
@@ -83,15 +83,13 @@ ssh ${ALL_SERVERS[1]} "
             scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[5]}:$WRK/project/target
         fi
 	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /tmp/driverId.txt
-
 "
 
-
-bin/done-test.sh
+# wait for one message to signal test done
+$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic sparkResults --max-messages 1
 #sleep 120
 
-ssh ${ALL_SERVERS[1]} "
-	cd ${WRK}
-    DRIVERID=$(</tmp/driverId.txt)
-    $WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}
-"
+ssh ${ALL_SERVERS[1]} '
+    driverid=$(</tmp/driverId.txt)
+    ${WRK}/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
+'
