@@ -86,10 +86,10 @@ ssh ${ALL_SERVERS[1]} "
 "
 
 # wait for one message to signal test done
-$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic sparkResults --max-messages 1
+$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
 #sleep 120
 
 ssh ${ALL_SERVERS[1]} '
     driverid=$(</tmp/driverId.txt)
-    ${WRK}/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
+    /home/securitycloud/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
 '
