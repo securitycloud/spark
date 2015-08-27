@@ -45,7 +45,7 @@ echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers
 
 # pack and copy the spark project
 tar -cf project.tar src pom.xml
-scp project.tar root@${ALL_SERVERS[1]}:/$WRK
+scp project.tar ${ALL_SERVERS[1]}:/$WRK
 rm project.tar
 SERVERS=${ALL_SERVERS[@]}
 # compile and run, then scp to all slave nodes
@@ -58,31 +58,32 @@ ssh ${ALL_SERVERS[1]} "
 	tar -xf project.tar -C project
 	cd project
 	mvn clean package > /dev/null
-       if [ "$?" -gt 0 ]
+    if [ "$?" -gt 0 ]
     	then
         	exit 1;
     	fi
 	if [ "$NUMBER_OF_SLAVES" -ge 1  ]
 		then
 			echo copying slave node to ${ALL_SERVERS[2]}
-			scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[2]}:$WRK/project/target
+			scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[2]}:$WRK/project/target
 		fi
 	if [ "$NUMBER_OF_SLAVES" -ge 2  ]
     	then
     		echo copying slave node to ${ALL_SERVERS[3]}
-    		scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[3]}:$WRK/project/target
+    		scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[3]}:$WRK/project/target
     	fi
-        if [ "$NUMBER_OF_SLAVES" -ge 3  ]
+    if [ "$NUMBER_OF_SLAVES" -ge 3  ]
         then
         	echo copying slave node to ${ALL_SERVERS[4]}
-            scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[4]}:$WRK/project/target
+            scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[4]}:$WRK/project/target
         fi
-        if [ "$NUMBER_OF_SLAVES" -ge 4  ]
+    if [ "$NUMBER_OF_SLAVES" -ge 4  ]
         then
         	echo copying slave node to ${ALL_SERVERS[5]}
-            scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar root@${ALL_SERVERS[5]}:$WRK/project/target
+            scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[5]}:$WRK/project/target
         fi
-	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /root/spark/driverId.txt
+	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /tmp/driverId.txt
+
 "
 
 
@@ -91,6 +92,6 @@ bin/done-test.sh
 
 ssh ${ALL_SERVERS[1]} "
 	cd ${WRK}
-        DRIVERID=$(</root/spark/driverId.txt)
-        $WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}
+    DRIVERID=$(</tmp/driverId.txt)
+    $WRK/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc-211:7077 \${DRIVERID}
 "

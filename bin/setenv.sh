@@ -15,7 +15,7 @@ KAFKA_PRODUCER=100.64.25.107
 KAFKA_CONSUMER=100.64.25.107
 SRV_ZK=${ALL_SERVERS[1]}
 TESTING_TOPIC=sparkOut
-SERVICE_TOPIC=spark-service
+SERVICE_TOPIC=sparkResults
 
 # url given by the start of spark-master.sh at the master node 
 MASTERURL=spark://sc1:7077

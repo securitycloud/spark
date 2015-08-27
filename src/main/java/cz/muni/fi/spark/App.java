@@ -34,6 +34,7 @@ import java.util.*;
 public class App {
 
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
+    static final int TEST_DATA_RECORDS_PER_PARTITION = 100_000;
     //static final int TEST_DATA_RECORDS_SIZE = 200_000_000; // total amount of events in our data set, indicates test end
     static final String FILTER_TEST_IP = "141.57.244.116";
 
@@ -71,10 +72,8 @@ public class App {
             throw new IllegalArgumentException("argument with number of machines needs to be a number");
         }
         System.out.println("Started test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
-        
-        // TODO: this should be correct after we have correct data in kafka
-        //final int TEST_DATA_RECORDS_SIZE = 40_000_000 * machinesCount;
-        final int TEST_DATA_RECORDS_SIZE = 39_750_000 * machinesCount;
+
+        final int TEST_DATA_RECORDS_SIZE = TEST_DATA_RECORDS_PER_PARTITION * 100;
 
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
         final SparkConf sparkConf = getSparkConf();
@@ -84,7 +83,7 @@ public class App {
 
         // INITIALIZE SPARK KAFKA STREAMS
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
-        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + (machinesCount) + "part", 1); // topic, numThreads
+        topicMap.put(kafkaProps.getProperty("consumer.topic")/* + "-" + (machinesCount) + "part"*/, 1); // topic, numThreads
 
         Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
         for (String key : kafkaProps.stringPropertyNames()) {
@@ -189,8 +188,9 @@ public class App {
                             break;
                         }
                         case "AggregationTest": {
-                            // kafka consumer gets a map with src IPs and the sums of packets
-                            ipPackets.value().forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
+                            final String result = "IP: " + FILTER_TEST_IP + ", amount of packets: " + ipPackets.value().get(FILTER_TEST_IP);
+                            // kafka consumer gets a message with IP and the sum of packets
+                            prod.send(new Tuple2<>(null, result));
                             break;
                         }
                         case "TopNTest": {
@@ -218,9 +218,28 @@ public class App {
                             break;
                         }
                         case "SynScanTest": {
-                            Map<String, Integer> filtered = SynScanTest.filterMap(ipOccurrences.value(), 10);
-                            // TODO: sort and do top N (100?)
-                            filtered.forEach((k, v) -> prod.send(new Tuple2<>(null, k + ":" + v)));
+                            Map<String, Integer> total = ipOccurrences.value();
+                            //Map<String, Integer> filtered = SynScanTest.filterMap(total, 10);
+
+                            MapValueComparator valueComparator = new MapValueComparator(total);
+                            TreeMap<String, Integer> sorted = new TreeMap<>(valueComparator);
+                            sorted.putAll(total);
+
+                            int n = 100; // top n
+                            int position = 1; // starting index
+                            List<Triplet<Integer, String, Integer>> topElements = new ArrayList<>();
+                            for (String ip : sorted.keySet()) {
+                                // triplet of position, ip and packet count
+                                Triplet<Integer, String, Integer> triplet = new Triplet<>(position, ip, sorted.get(ip));
+                                topElements.add(triplet);
+                                if (position == n) {
+                                    break;
+                                } else {
+                                    position++;
+                                }
+                            }
+                            // kafka consumer gets a list of triplets with position, ip and packet count
+                            prod.send(new Tuple2<>(null, topElements.toString()));
                             break;
                         }
                         default: {

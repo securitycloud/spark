@@ -9,7 +9,7 @@ then
 fi
 BATCH_SIZE=$1
 
-KAFKA_JAR=$WRK/kafka/kafka-filip/target/kafka-filip-1.0-SNAPSHOT-jar-with-dependencies.jar
+KAFKA_JAR=../kafka/kafka-filip/target/kafka-filip-1.0-SNAPSHOT-jar-with-dependencies.jar
 
 # LOG
 echo -e $LOG Start producing flows on $KAFKA_PRODUCER $OFF
