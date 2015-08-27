@@ -91,5 +91,5 @@ $KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic 
 
 ssh ${ALL_SERVERS[1]} '
     driverid=$(</tmp/driverId.txt)
-    /home/securitycloud/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
+    /home/securitycloud/spark/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
 '
