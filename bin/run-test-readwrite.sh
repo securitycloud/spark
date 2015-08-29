@@ -40,15 +40,15 @@ BATCH_SIZE=$4
 #        $KAFKA_INSTALL/bin/kafka-console-producer.sh --topic $SERVICE_TOPIC --broker-list localhost:9092
 #"
 
-echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers
+echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers $OFF
 
-ssh sc6 "cd ~/ekafsender; ./reset_kafka_topics.sh"
+ssh sc6 "cd ~/ekafsender; ./reset_kafka_topics.sh" > /dev/null
 
 
 # pack and copy the spark project
-tar -cf project.tar src pom.xml
-scp project.tar ${ALL_SERVERS[1]}:/$WRK
-rm project.tar
+tar -cf project.tar src pom.xml > /dev/null
+scp project.tar ${ALL_SERVERS[1]}:/$WRK > /dev/null
+rm project.tar > /dev/null
 SERVERS=${ALL_SERVERS[@]}
 # compile and run, then scp to all slave nodes
 NUMBER_OF_SLAVES=$((COMPUTERS - 1))
@@ -85,17 +85,19 @@ ssh ${ALL_SERVERS[1]} "
             scp target/sparkTest-1.0-SNAPSHOT-jar-with-dependencies.jar ${ALL_SERVERS[5]}:$WRK/project/target
         fi
 	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE | sed -n -e 's/^.*Driver successfully submitted as //p' > /tmp/driverId.txt
-"
+" > /dev/null 2>&1
+
+echo -e Driver submitted, running producer
 
 # wait for one message to signal test done
 #$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
 #sleep 120
 
-# wait for application settle and run kafka producer that waits for test result
-sleep 5
-ssh sc6 "cd ~/ekafsender/; ./run.sh"
+# wait for application to settle and run kafka producer that waits for test result
+sleep 10
+ssh sc6 "cd ~/ekafsender/; ./run.sh" | grep "Waiting for result" -B 1 -A 4
 
 ssh ${ALL_SERVERS[1]} "
     driverid=\$(</tmp/driverId.txt)
     /home/securitycloud/spark/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
-"
+" 2> /dev/null | grep "State of"

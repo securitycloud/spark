@@ -157,7 +157,7 @@ public class App {
             LocalDateTime startDateTime = LocalDateTime.now();
             boolean finished = false;
             boolean receivedData = false;
-            int step = 0; // on 10 measurements are printed
+            int step = 0; // every 5 s (100th call) measurements are printed
             while (!finished) {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (!receivedData && processedRecords > 0) {
@@ -232,7 +232,7 @@ public class App {
                             List<Triplet<Integer, String, Integer>> topElements = new ArrayList<>();
                             for (String ip : sorted.keySet()) {
                                 // triplet of position, ip and packet count
-                                Triplet<Integer, String, Integer> triplet = new Triplet<>(position, ip, sorted.get(ip));
+                                Triplet<Integer, String, Integer> triplet = new Triplet<>(position, ip, total.get(ip));
                                 topElements.add(triplet);
                                 if (position == n) {
                                     break;
@@ -261,7 +261,7 @@ public class App {
                     finished = true;
                 } else {
                     // Updates min and max processed records rate with average that is taken every 5 seconds if test is still running
-                    if (processedRecords > 0 && (step % 10) == 0) {
+                    if (processedRecords > 0 && (step % 100) == 0) {
                         Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
                         if (processingTimeInMillis >= 10000) { // give spark some time to start processing records
                             Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
@@ -281,7 +281,7 @@ public class App {
                     step++;
                 }
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     System.out.println(e.getLocalizedMessage());
                 }
