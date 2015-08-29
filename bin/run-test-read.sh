@@ -40,7 +40,7 @@ BATCH_SIZE=$4
 #        $KAFKA_INSTALL/bin/kafka-console-producer.sh --topic $SERVICE_TOPIC --broker-list localhost:9092
 #"
 
-echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers
+echo -e $LOG Running Test $TESTTYPE on $COMPUTERS computers $OFF
 
 
 # pack and copy the spark project
