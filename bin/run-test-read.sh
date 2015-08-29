@@ -89,7 +89,7 @@ ssh ${ALL_SERVERS[1]} "
 $KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
 #sleep 120
 
-ssh ${ALL_SERVERS[1]} '
-    driverid=$(</tmp/driverId.txt)
+ssh ${ALL_SERVERS[1]} "
+    driverid=\$(</tmp/driverId.txt)
     /home/securitycloud/spark/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
-'
+"

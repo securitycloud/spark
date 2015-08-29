@@ -95,7 +95,7 @@ ssh ${ALL_SERVERS[1]} "
 sleep 5
 ssh sc6 "cd ~/ekafsender/; ./run.sh"
 
-ssh ${ALL_SERVERS[1]} '
-    driverid=$(</tmp/driverId.txt)
+ssh ${ALL_SERVERS[1]} "
+    driverid=\$(</tmp/driverId.txt)
     /home/securitycloud/spark/spark-bin-hadoop/bin/spark-class org.apache.spark.deploy.Client kill spark://sc1:7077 \${driverid}
-'
+"
