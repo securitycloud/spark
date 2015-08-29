@@ -20,7 +20,7 @@
         <fastutil.version>7.0.7</fastutil.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>100.64.25.107:2181</kafka.consumer.zookeeper.url>
-        <kafka.consumer.topic>dataset</kafka.consumer.topic>
+        <kafka.consumer.topic>tst</kafka.consumer.topic>
         <kafka.producer.topic>out</kafka.producer.topic>
         <kafka.producer.servers>100.64.25.107:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>

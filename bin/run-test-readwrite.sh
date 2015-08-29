@@ -88,7 +88,7 @@ ssh ${ALL_SERVERS[1]} "
 "
 
 # wait for one message to signal test done
-$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
+#$KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
 #sleep 120
 
 # wait for application settle and run kafka producer that waits for test result
