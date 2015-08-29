@@ -12,8 +12,8 @@ TESTTYPES[5]=TopNTest
 TESTTYPES[6]=SynScanTest
 
 COMPUTERS[1]=5
-COMPUTERS[2]=4
-COMPUTERS[3]=3
+#COMPUTERS[2]=4
+#COMPUTERS[3]=3
 
 REPEAT=1
 
@@ -52,4 +52,4 @@ done
 
 # bin/result-download.sh | bin/result-parse.sh > out
 
-#bin/kill-cluster.sh
+bin/kill-cluster.sh

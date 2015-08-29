@@ -21,7 +21,7 @@
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>100.64.25.107:2181</kafka.consumer.zookeeper.url>
         <kafka.consumer.topic>dataset</kafka.consumer.topic>
-        <kafka.producer.topic>sparkOut</kafka.producer.topic>
+        <kafka.producer.topic>out</kafka.producer.topic>
         <kafka.producer.servers>100.64.25.107:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
