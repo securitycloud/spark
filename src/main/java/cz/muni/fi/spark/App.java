@@ -166,7 +166,9 @@ public class App {
                 }
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
-                    final String testInfo = LocalDateTime.now().format(formatter) + " " + testClass + " [" +
+                    LocalDateTime now = LocalDateTime.now();
+                    long testDuration = startDateTime.until(now, ChronoUnit.MILLIS);
+                    final String testInfo = now.format(formatter) + " " + testClass + " [" +
                             machinesCount + " machines / " + kafkaStreamsCount + " streams]";
                     
                     switch (testClass) {
@@ -252,8 +254,8 @@ public class App {
                     // common for all tests: print test info to console and test info + performance info to kafka
                     Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
                     Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
-                    final String performanceResult = String.format("[k flows/s (min/max/avg): %s | %s | %s ] [processed total: %s]",
-                            min/1000, max/1000, averageSpeed/1000, processedRecords);
+                    final String performanceResult = String.format("[k flows/s (min/max/avg): %s | %s | %s ] [processed total: %s in %s s]",
+                            min/1000, max/1000, averageSpeed/1000, processedRecords, testDuration / 1000f);
                     System.out.println(testInfo);
                     System.out.println(performanceResult);
                     printTestResult(resultsTopic, null, Arrays.asList(testInfo + " " + performanceResult));

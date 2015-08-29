@@ -23,8 +23,9 @@ NUM_TESTS=$((NUM_TESTS * ${#COMPUTERS[@]}))
 NUM_TESTS=$((NUM_TESTS * ${REPEAT}))
 ACT_TEST=1
 
-echo -e $LOG Recreating input topic $SERVICE_TOPIC on $KAFKA_CONSUMER $OFF
-bin/run-topic.sh $SERVICE_TOPIC 1 $KAFKA_CONSUMER
+# topic is recreated each time by our producer
+#echo -e $LOG Recreating input topic $SERVICE_TOPIC on $KAFKA_CONSUMER $OFF
+#bin/run-topic.sh $SERVICE_TOPIC 1 $KAFKA_CONSUMER
 
 for BS in "${BATCH_SIZE[@]}"
 do
