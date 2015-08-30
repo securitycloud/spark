@@ -13,7 +13,7 @@ do
 	if [ "$INSTALLED_SLAVES" -le "$NUMBER_OF_SLAVES"  ]
 		then
 			echo installing spark on $i
-			. bin/install-spark.sh $i
+			. bin/install-spark.sh $i > /dev/null
 			let "INSTALLED_SLAVES += 1"
 		fi
 done
