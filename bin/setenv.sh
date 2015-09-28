@@ -24,7 +24,7 @@ MASTERURL=spark://sc-211:7077
 WRK=/root/spark
 
 # mirror for spark built for haddop tgz
-URL_SPARK=http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.6.tgz
+URL_SPARK=http://mirror.hosting90.cz/apache/spark/spark-1.5.0/spark-1.5.0-bin-hadoop2.6.tgz
 
 # console color switches
 ERR="\033[1;31m"

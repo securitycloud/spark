@@ -6,9 +6,8 @@
 # empty the work directory on each machine
 for i in "${ALL_SERVERS[@]}"
 do
-	echo clearing on $i
+	echo clearing work directory on $i
 	ssh root@$i "
-		echo removing spark
 		rm -rf $WRK/*
 		"
 done

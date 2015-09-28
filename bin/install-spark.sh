@@ -17,6 +17,6 @@ ssh root@$SERVER "
     mkdir spark-bin-hadoop
     mkdir project
     mkdir project/target
-    tar -xzvf spark.tgz -C spark-bin-hadoop --strip 1
+    tar -xzvf spark.tgz -C spark-bin-hadoop --strip 1 > /dev/null
     rm spark.tgz
 "

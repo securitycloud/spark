@@ -39,7 +39,7 @@ do
         #bin/run-input.sh $BS
         SLAVES_COUNT=$((PC - 1))
         sed -i "6s/.*/NUMBER_OF_SLAVES=${SLAVES_COUNT}/" bin/setenv.sh
-        bin/restart-cluster.sh > /dev/null 2>&1
+        bin/restart-cluster.sh #> /dev/null 2>&1
         echo -e $OK restarted cluster for ${SLAVES_COUNT} slaves $OFF
 
         for i in `seq 1 $REPEAT`
