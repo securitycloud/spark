@@ -155,7 +155,7 @@ public class App {
             while (!finished) {
                 Integer processedRecords = processedRecordsCounter.value();
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
-                    final String resultsTopic = applicationProps.getProperty("application.resultsTopic");
+                    final String resultsTopic = applicationProps.getProperty("kafka.producer.resultsTopic");
                     final String testInfo = LocalDateTime.now().format(formatter) + " " + testClass + " [" +
                             machinesCount + " machines / " + kafkaStreamsCount + " streams]";
                     

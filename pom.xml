@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties> <!-- default configuration to run from any of the 10.16.31.211-215 machines -->
+    <properties>
         <!-- Misc -->
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,8 +19,11 @@
         <kafka.version>0.8.2.1</kafka.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
+        <!-- input topic mutual prefix, expecting existing input topics to have suffixes in the format: "-'machinesCount'part", i.e. -5part, -3part ...
+         so if kafka.consumer.topic is set to "data" and we will test on 5 and 4 partitions, then we need topics "data-5part, "data-4part" prepared for testing -->
         <kafka.consumer.topic>36m</kafka.consumer.topic>
-        <kafka.producer.topic>sparkOutput</kafka.producer.topic>
+        <kafka.producer.topic>sparkOutput</kafka.producer.topic> <!-- topic for test output -->
+        <kafka.producer.resultsTopic>sparkResults</kafka.producer.resultsTopic> <!-- topic for test performance results -->
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
@@ -41,9 +44,8 @@
         <!-- start receiving all messages from topic start -->
         <kafka.consumer.auto.offset.reset>smallest</kafka.consumer.auto.offset.reset>
         <!-- command line arguments defaults -->
-        <spark.machines>5</spark.machines>
-        <spark.testtype>CountTest</spark.testtype>
-        <application.resultsTopic>sparkResults</application.resultsTopic>
+        <spark.machines>Undefined</spark.machines> <!-- total number of machines in cluster -->
+        <spark.testtype>Undefined</spark.testtype> <!-- test class name, i.e. ReadWriteTest | FilterIPTest | ... -->
     </properties>
 
     <dependencies>

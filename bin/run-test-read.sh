@@ -39,7 +39,7 @@ rm project.tar
 SERVERS=${ALL_SERVERS[@]}
 # compile and run, then scp to all slave nodes
 NUMBER_OF_SLAVES=$((COMPUTERS - 1))
-
+# copy to master node and from there to all slave nodes
 ssh root@${ALL_SERVERS[1]} "
 	cd ${WRK}
 	rm -rf project/
@@ -73,13 +73,12 @@ ssh root@${ALL_SERVERS[1]} "
     	fi
 	mvn exec:exec -Dspark.machines=$COMPUTERS -Dspark.testtype=$TESTTYPE
 "
-echo -e Test running...
-echo -e ${OK}
-# wait for one message to signal test done
+echo -e ${OK} Test in progress... cluster monitoring at http://${ALL_SERVERS[1]}:8080
+# wait for one message to SERVICE TOPIC to signal test done
 ssh root@${KAFKA_CONSUMER} "
 	 $KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
 "
-# kill and start cluster again
+# restart cluster
 echo -e ${OFF} Restarting cluster
 bin/kill-cluster.sh
-bin/start-cluster.sh
+bin/start-cluster.sh > /dev/null
