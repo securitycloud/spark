@@ -13,7 +13,7 @@ ALL_SERVERS[5]=10.16.31.215
 KAFKA_INSTALL=/root/kafka/kafka_2.11-0.8.2.1
 KAFKA_PRODUCER=10.16.31.200
 KAFKA_CONSUMER=10.16.31.201
-SRV_ZK=${ALL_SERVERS[1]}
+
 TESTING_TOPIC=sparkOutput # should match kafka.producer.topic in pom.xml
 SERVICE_TOPIC=sparkResults
 
