@@ -2,6 +2,7 @@
 Tool for automatic cluster testing with apache spark.
 
 ## Configuration
+You should have kafka set up with topic containing data for test.
 ### pom.xml
 notable properties that should be set:
 * **kafka.consumer.zookeeper.url** - input kafka zookeeper url
@@ -26,7 +27,11 @@ notable properties that should be set:
 * **MASTERURL** - should match **spark.master**
 * **WRK** - folder used for everyting on all servers (installation of spark, project...)
 
-### to run a set of tests with on topics with data
+### App.java
+You should not need to change anything in the sources, unless you have different dataset. Then you may want to change TEST_DATA_RECORDS_SIZE (total number of records in dataset) or FILTER_TEST_IP (IP address used in filter test) variables.
+
+## Testing
+### to run a set of tests on topics with data
 1. In `bin/all-test-read.sh` set the desired batch sizes, test types and amount of computers to test (+repetitions)
 2. Execute `bin/all-test-read.sh`, results will be in **SERVICE_TOPIC**
 
