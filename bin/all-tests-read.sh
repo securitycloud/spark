@@ -6,15 +6,15 @@ BATCH_SIZE[1]=5000
 
 TESTTYPES[1]=ReadWriteTest
 TESTTYPES[2]=FilterIPTest
-#TESTTYPES[1]=CountTest
-#TESTTYPES[2]=AggregationTest
-#TESTTYPES[3]=TopNTest
-#TESTTYPES[4]=SynScanTest
+TESTTYPES[3]=CountTest
+TESTTYPES[4]=AggregationTest
+TESTTYPES[5]=TopNTest
+TESTTYPES[6]=SynScanTest
 
 COMPUTERS[1]=5
 COMPUTERS[2]=3
 
-REPEAT=2
+REPEAT=1
 
 # compute total test count
 NUM_TESTS=${#TESTTYPES[@]}

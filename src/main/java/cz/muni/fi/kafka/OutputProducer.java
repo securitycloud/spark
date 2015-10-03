@@ -1,7 +1,6 @@
 package cz.muni.fi.kafka;
 
 import cz.muni.fi.util.PropertiesParser;
-import kafka.javaapi.producer.Producer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -25,7 +24,8 @@ public class OutputProducer {
     }
 
     /**
-     * Sends a key value pair to Kafka, key is null, value is string.
+     * Sends a key value pair to Kafka, key is null, value is msg string.
+     * Message is sent to default output topic.
      *
      * @param msg Tuple2 to be send
      */
@@ -34,7 +34,7 @@ public class OutputProducer {
     }
 
     /**
-     * Sends a key value pair to Kafka, key is null, value is string.
+     * Sends a key value pair to Kafka, key is null, value is msg string.
      *
      * @param msg   Tuple2 to be send
      * @param topic overrides the default output topic

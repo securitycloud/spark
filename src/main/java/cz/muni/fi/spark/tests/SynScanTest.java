@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.commons.Flow;
 import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
@@ -36,6 +35,18 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
         this.ipOccurrences = ipOccurrences;
     }
 
+    /**
+     * Applies a function call to each partition of this RDD.
+     * Function call parses each message on the partition into Flow and counts source ip addresses occurrences in messages
+     * with only Syn flag into a temporary map that is merged at the end on node with driver to shared map of total
+     * occurrences.
+     * Before merging the temporary map, we remove ip addresses that had only 1 occurrence as a SynScan attack suspect.
+     * At the end updates a count of total processed messages with records processed on the particular node where this
+     * method is run.
+     *
+     * @param rdd batch to be processed
+     * @throws IOException on ObjectMapper error
+     */
     @Override
     public Void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
@@ -63,7 +74,8 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
     }
 
     /**
-     * Takes a map of ip addresses and their occurrences and removes elements with less than 11 occurrences
+     * Takes a map of ip addresses and their occurrences and removes elements with less than value argument occurrences
+     * of source ip addresses (or any other Integer value)
      *
      * @param map map to be filtered
      * @param value value that the flow count is discarded if its lees than or equal to

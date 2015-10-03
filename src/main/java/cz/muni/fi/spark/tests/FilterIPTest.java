@@ -34,6 +34,16 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
         this.processedRecordsCounter = processedRecordsCounter;
     }
 
+    /**
+     * Applies a function call to each partition of this RDD.
+     * Function call parses each message on the partition into Flow and if the destination IP of the Flow matches our
+     * target FILTERED_IP, we send the message to output kafka topic.
+     * At the end updates a count of total processed messages with records processed on the particular node where this
+     * method is run.
+     *
+     * @param rdd batch to be processed
+     * @throws IOException on ObjectMapper error
+     */
     @Override
     public Void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {

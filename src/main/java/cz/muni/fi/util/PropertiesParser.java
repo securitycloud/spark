@@ -4,8 +4,6 @@ import java.io.*;
 import java.util.Properties;
 
 /**
- * Created by filip on 16.4.15.
- *
  * Util class for parsing of properties files.
  */
 public class PropertiesParser {

@@ -92,15 +92,9 @@ public class App {
 
         List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(kafkaStreamsCount);
         for (int i = 0; i < kafkaStreamsCount; i++) {
-            // standard basic stream creation
-            // kafkaStreams.add(KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), "1", topicMap));
-
             // advanced stream creation with kafka properties as parameter
             kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
                     StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER()));
-
-            // direct stream - new approach test
-            //kafkaStreams.add(KafkaUtils.createDirectStream(jssc, String.class, String.class, StringDecoder.class, StringDecoder.class, kafkaPropsMap, topicSet));
         }
 
         // INITIALIZE SPARK STREAMING AND PREPARE SHARED VARIABLES IN ALL TESTS
@@ -295,6 +289,7 @@ public class App {
                 .set("spark.executor.memory", sparkProps.getProperty("spark.executor.memory"))
                 .set("spark.serializer", sparkProps.getProperty("spark.serializer"))
                 .set("spark.driver.cores", sparkProps.getProperty("spark.driver.cores"))
-                .set("spark.default.parallelism", sparkProps.getProperty("spark.default.parallelism"));
+                .set("spark.default.parallelism", sparkProps.getProperty("spark.default.parallelism"))
+                .set("spark.ui.port", sparkProps.getProperty("spark.ui.port"));
     }
 }

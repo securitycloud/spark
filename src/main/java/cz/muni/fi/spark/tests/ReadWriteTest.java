@@ -28,11 +28,19 @@ public class ReadWriteTest implements Function<JavaPairRDD<String, String>, Void
         this.processedRecordsCounter = processedRecordsCounter;
     }
 
+    /**
+     * Applies a function call to each partition of this RDD.
+     * Function call sends each message on the partition to output kafka topic.
+     * At the end updates a count of total processed messages with records processed on the particular node where this
+     * method is run.
+     *
+     * @param rdd batch to be processed
+     */
     @Override
-    public Void call(JavaPairRDD<String, String> rdd) throws IOException {
+    public Void call(JavaPairRDD<String, String> rdd) {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
-            public void call(Iterator<Tuple2<String, String>> it) throws IOException {
+            public void call(Iterator<Tuple2<String, String>> it) {
                 Integer tempCount = 0;
                 while (it.hasNext()) {
                     Tuple2<String, String> msg = it.next();

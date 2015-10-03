@@ -26,6 +26,13 @@ public class MapAccumulator implements AccumulatorParam<Map<String, Integer>>, S
         return new HashMap<>();
     }
 
+    /**
+     * Merge two maps into one.
+     *
+     * @param map1 map1 to be merged
+     * @param map2 map2 to be merged
+     * @return merged map
+     */
     private Map<String, Integer> mergeMap(Map<String, Integer> map1, Map<String, Integer> map2) {
         Map<String, Integer> result = new HashMap<>(map1);
         map2.forEach((k, v) -> result.merge(k, v, (a, b) -> a + b));
