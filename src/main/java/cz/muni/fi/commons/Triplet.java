@@ -1,12 +1,14 @@
 package cz.muni.fi.commons;
 
+import java.io.Serializable;
+
 /**
  * Class representing three values.
  */
-public class Triplet<T, U, V> {
-    private T a;
-    private U b;
-    private V c;
+public class Triplet<T, U, V> implements Serializable {
+    protected T a;
+    protected U b;
+    protected V c;
 
     public Triplet(T a, U b, V c) {
         this.a = a;

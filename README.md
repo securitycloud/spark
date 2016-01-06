@@ -56,3 +56,12 @@ runs all tests 2 times on 5 machines first, followed by all tests 2 times on 4 m
 3. Execute `bin/install-cluster.sh` to prepare (download and unpack) spark on every machine
 4. Execute `bin/start-cluster.sh` to run spark in cluster mode, web-based user interface to monitor the cluster will be running at http://10.16.31.211:8080/ (master node) and http://10.16.31.212:8081/ http://10.16.31.213:8081/ http://10.16.31.214:8081/ http://10.16.31.215:8081/ (slaves)
 5. Execute `bin/deploy-to-cluster.sh` to archive, copy, unpack and build at 10.16.31.211, app will then start automatically, ready to receive json from kafka
+
+## Reports
+Tool is able to export basic statistics in CSV format into specified Kafka topic.
+### setup of reports exporting
+* **kafka.producer.statisticsTopic** - Kafka topic where statistics results are exported
+* **kafka.producer.statisticsFormat** - format of reports; for now, only CSV available, other values print Java toString values
+
+### how to run reports exporting
+Run a single test with `Statistics` filled as the test type name.

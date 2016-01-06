@@ -1,11 +1,15 @@
 package cz.muni.fi.spark;
 
+import cz.muni.fi.commons.LongTriplet;
 import cz.muni.fi.commons.MapValueComparator;
 import cz.muni.fi.commons.Triplet;
 import cz.muni.fi.kafka.OutputProducer;
+import cz.muni.fi.spark.accumulators.BasicStatisticsAccumulators;
 import cz.muni.fi.spark.accumulators.MapAccumulator;
+import cz.muni.fi.spark.statistics.BasicStatistics;
 import cz.muni.fi.spark.tests.*;
 import cz.muni.fi.util.PropertiesParser;
+import cz.muni.fi.util.Utils;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -38,6 +42,9 @@ public class App {
     static final String FILTER_TEST_IP = "62.148.241.49"; // used for FilterIPTest only
 
     private static final OutputProducer prod = new OutputProducer();
+    
+    private static BasicStatisticsAccumulators statAccums;
+    private static boolean firstStatistics = true;
 
     /**
      * Main function executed on master node via /bin/spark-submit. Prepares and runs desired test.
@@ -103,6 +110,7 @@ public class App {
         Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
         Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific
         Accumulator<Map<String, Integer>> ipOccurrences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
+        statAccums = new BasicStatisticsAccumulators(jssc);
 
         // START STREAMING WITH PROVIDED TEST CLASS AS ARGUMENT
         switch (testClass) {
@@ -128,6 +136,10 @@ public class App {
             }
             case "SynScanTest": {
                 messages.foreachRDD(new SynScanTest(processedRecordsCounter, ipOccurrences));
+                break;
+            }
+            case "Statistics": {
+                messages.foreachRDD(new BasicStatistics(processedRecordsCounter, statAccums));
                 break;
             }
             case "Undefined": {
@@ -201,6 +213,7 @@ public class App {
                             break;
                         }
                         default: {
+                            prod.send(new Tuple2<>(null, testClass + ": Done"));
                             break;
                         }
                     }
@@ -234,6 +247,83 @@ public class App {
                                     min/1000, max/1000, averageSpeed/1000, processedRecords));
                         }
                     }
+                    
+                    if (testClass.equals("Statistics") && processedRecords > 0 && (step % 2) == 0) {
+                        final String statisticsTopic = applicationProps.getProperty("kafka.producer.statisticsTopic");
+                        final String statisticsFormat = applicationProps.getProperty("kafka.producer.statisticsFormat");
+                        
+                        // get current accumulator values
+                        LongTriplet totalValue = statAccums.getTotalCounter().value();
+                        Map<String, LongTriplet> portCounter = statAccums.getPortCounter().value();
+                        SortedMap<String, LongTriplet> portSortedMap = Utils.getSortedMapWithTripletComparator(portCounter);
+                        SortedMap<String, LongTriplet> ipSortedMap = Utils.getSortedMapWithTripletComparator(statAccums.getIpCounter().value());
+                        SortedMap<String, LongTriplet> ipAggregationSortedMap = Utils.getSortedMapWithTripletComparator(statAccums.getIpAggregationCounter().value());
+                        
+                        // reset accumulators to gather data for next interval
+                        statAccums.getTotalCounter().setValue(new LongTriplet());
+                        statAccums.getPortCounter().setValue(new HashMap<>());
+                        statAccums.getIpCounter().setValue(new HashMap<>());
+                        statAccums.getIpAggregationCounter().setValue(new HashMap<>());
+                        
+                        if (statisticsFormat.equals("CSV")) {
+                            if (firstStatistics) {
+                                // print header on top of CSV output
+                                StringBuilder portHeader = new StringBuilder();
+                                for (int i = 1; i <= 10; i++) {
+                                    portHeader.append(String.format("port %s;port %s flows;port %s packets;port %s bytes;", i, i, i, i));
+                                }
+                                StringBuilder ipHeader = new StringBuilder();
+                                for (int i = 1; i <= 10; i++) {
+                                    ipHeader.append(String.format("IP %s;IP %s flows;IP %s packets;IP %s bytes;", i, i, i, i));
+                                }
+                                StringBuilder ipAggrHeader = new StringBuilder();
+                                for (int i = 1; i <= 100; i++) {
+                                    ipAggrHeader.append(String.format("IP mask %s;IP mask %s flows;IP mask %s packets;IP mask %s bytes;", i, i, i, i));
+                                }
+                                
+                                String csvStatsHeader = String.format("%s;;%s;;%s;%s;;%s;%s;%s",
+                                        "Time", "Flows;Packets;Bytes",
+                                        "http flows;http packets;http bytes",
+                                        "https flows;https packets;https bytes",
+                                        portHeader.toString(),
+                                        ipHeader.toString(),
+                                        ipAggrHeader.toString());
+                                printTestResult(statisticsTopic, null, 
+                                        Arrays.asList(csvStatsHeader));
+                                firstStatistics = false;
+                            }
+                            
+                            // CSV output result line
+                            printTestResult(statisticsTopic, null,
+                                    // time, 3 total values, 3x http + 3x https, 3x 10 ports, 3x 10 IPs, aggregated IPs
+                                    Arrays.asList(String.format("%s;;%s;;%s;%s;;%s;%s;%s",
+                                            LocalDateTime.now().format(formatter),
+                                            totalValue.toCsvString(),
+                                            portCounter.getOrDefault("80", new LongTriplet()).toCsvString(),
+                                            portCounter.getOrDefault("443", new LongTriplet()).toCsvString(),
+                                            Utils.mapWithTripletToCsv(Utils.putFirstEntries(10, portSortedMap), 10),
+                                            Utils.mapWithTripletToCsv(Utils.putFirstEntries(10, ipSortedMap), 10),
+                                            Utils.mapWithTripletToCsv(ipAggregationSortedMap, 100))));
+                        } else {
+                            // no meaningful format specified, print statistics using Java toString methods
+                            printTestResult(statisticsTopic, null, 
+                                    Arrays.asList(String.format("%s;%s;%s", totalValue.getA(), totalValue.getB(), totalValue.getC())));
+
+                            printTestResult(statisticsTopic, null, 
+                                    Arrays.asList("http: " + portCounter.getOrDefault("80", new LongTriplet()).toString() +
+                                            ";https: " + portCounter.getOrDefault("443", new LongTriplet()).toString()));
+
+                            printTestResult(statisticsTopic, null, 
+                                    Arrays.asList(Utils.putFirstEntries(10, portSortedMap).toString()));
+
+                            printTestResult(statisticsTopic, null, 
+                                    Arrays.asList(Utils.putFirstEntries(10, ipSortedMap).toString()));
+
+                            printTestResult(statisticsTopic, null, 
+                                    Arrays.asList(ipAggregationSortedMap.toString()));
+                        }
+                    }
+                    
                     step++;
                 }
                 try {

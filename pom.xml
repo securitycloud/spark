@@ -24,6 +24,8 @@
         <kafka.consumer.topic>36m</kafka.consumer.topic>
         <kafka.producer.topic>sparkOutput</kafka.producer.topic> <!-- topic for test output -->
         <kafka.producer.resultsTopic>sparkResults</kafka.producer.resultsTopic> <!-- topic for test performance results -->
+        <kafka.producer.statisticsTopic>sparkStatistics</kafka.producer.statisticsTopic> <!-- topic for test statistics -->
+        <kafka.producer.statisticsFormat>CSV</kafka.producer.statisticsFormat> <!-- test statistics format -->
         <kafka.producer.servers>10.16.31.201:9092</kafka.producer.servers>
         <kafka.producer.value.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.value.serializer>
         <kafka.producer.key.serializer>org.apache.kafka.common.serialization.StringSerializer</kafka.producer.key.serializer>
