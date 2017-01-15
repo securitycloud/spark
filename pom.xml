@@ -14,7 +14,7 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Dependency versions -->
-        <spark.version>1.5.1</spark.version>
+        <spark.version>1.6.3</spark.version>
         <scala.binary.version>2.11</scala.binary.version>
         <kafka.version>0.8.2.1</kafka.version>
         <!-- Kafka -->
@@ -150,7 +150,6 @@
                         <argument>${spark.testtype}</argument>
                         <argument>${spark.machines}</argument>
                     </arguments>
-
                 </configuration>
             </plugin>
         </plugins>
@@ -164,4 +163,47 @@
             </resource>
         </resources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <properties>
+                <kafka.consumer.zookeeper.url>localhost:2181</kafka.consumer.zookeeper.url>
+                <kafka.consumer.topic>spark-test</kafka.consumer.topic>
+                <kafka.producer.servers>localhost:9092</kafka.producer.servers>
+                <kafka.producer.client.id>my-producer</kafka.producer.client.id>
+                <spark.home>/home/filip/spark-work-dir/spark-bin-hadoop</spark.home>
+                <spark.master>local[4]</spark.master>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.4.0</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <executable>
+                                ${spark.home}/bin/spark-submit
+                            </executable>
+                            <arguments>
+                                <argument>--class</argument><argument>cz.muni.fi.spark.App</argument>
+                                <argument>--master</argument><argument>${spark.master}</argument>
+                                <argument>--deploy-mode</argument><argument>client</argument>
+                                <argument>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}</argument>
+                                <argument>${spark.testtype}</argument>
+                                <argument>${spark.machines}</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

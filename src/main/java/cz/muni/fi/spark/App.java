@@ -22,6 +22,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
+import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 import scala.Tuple2;
@@ -38,7 +39,7 @@ import java.util.*;
 public class App {
 
     static final long SPARK_STREAMING_BATCH_INTERVAL = 1000;
-    static final int TEST_DATA_RECORDS_SIZE = 36846558; // total amount of events in our data set, indicates test end
+    static final int TEST_DATA_RECORDS_SIZE = 2000000; // total amount of events in our data set, indicates test end
     static final String FILTER_TEST_IP = "62.148.241.49"; // used for FilterIPTest only
 
     private static final OutputProducer prod = new OutputProducer();
@@ -63,9 +64,9 @@ public class App {
         } catch (ArrayIndexOutOfBoundsException ex) {
             throw new MissingArgumentException("missing argument: 'testClass'");
         }
-        final int machinesCount; // total count of machines including master
-        final int kafkaStreamsCount; // number of kafka streams, should be less or equal to the number of kafka partitions
-        try {
+        final int machinesCount = 1; // total count of machines including master
+        final int kafkaStreamsCount = 1; // number of kafka streams, should be less or equal to the number of kafka partitions
+        /*try {
             machinesCount = Integer.parseInt(args[1]);
             if (machinesCount < 3) {
                 throw new IllegalArgumentException("argument with number of machines needs to be greater or equal 3, is: " + args[1]);
@@ -76,7 +77,7 @@ public class App {
             throw new MissingArgumentException("missing argument: 'machinesCount'");
         } catch (NumberFormatException numberFormatException) {
             throw new IllegalArgumentException("argument with number of machines needs to be a number");
-        }
+        }*/
         System.out.println("Started test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
 
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
@@ -87,25 +88,26 @@ public class App {
 
         // INITIALIZE SPARK KAFKA STREAMS
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
-        topicMap.put(kafkaProps.getProperty("consumer.topic") + "-" + machinesCount + "part", 1); // topic, numThreads
+        topicMap.put(kafkaProps.getProperty("consumer.topic"), 1); // topic, numThreads
 
-        Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
-        for (String key : kafkaProps.stringPropertyNames()) {
-            kafkaPropsMap.put(key, kafkaProps.getProperty(key));
-        }
+//        Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
+//        for (String key : kafkaProps.stringPropertyNames()) {
+//            kafkaPropsMap.put(key, kafkaProps.getProperty(key));
+//        }
 
         // reset zookeeper data for group so all messages from topic beginning can be read
-        ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers/" + kafkaProps.getProperty("group.id"));
-
-        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(kafkaStreamsCount);
-        for (int i = 0; i < kafkaStreamsCount; i++) {
-            // advanced stream creation with kafka properties as parameter
-            kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
-                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER()));
-        }
+        ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers");
+//        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(kafkaStreamsCount);
+//        for (int i = 0; i < kafkaStreamsCount; i++) {
+//            // advanced stream creation with kafka properties as parameter
+//            kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
+//                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER()));
+//        }
 
         // INITIALIZE SPARK STREAMING AND PREPARE SHARED VARIABLES IN ALL TESTS
-        JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
+//        JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
+        JavaPairReceiverInputDStream<String, String> messages =
+                KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), kafkaProps.getProperty("group.id"), topicMap);
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0); // accumulator used for performance monitoring in all tests
         Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
         Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific
