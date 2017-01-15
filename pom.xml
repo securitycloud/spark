@@ -16,7 +16,7 @@
         <!-- Dependency versions -->
         <spark.version>1.6.3</spark.version>
         <scala.binary.version>2.11</scala.binary.version>
-        <kafka.version>0.8.2.1</kafka.version>
+        <kafka.version>0.10.1.1</kafka.version>
         <!-- Kafka -->
         <kafka.consumer.zookeeper.url>10.16.31.200:2181</kafka.consumer.zookeeper.url>
         <!-- input topic mutual prefix, expecting existing input topics to have suffixes in the format: "-'machinesCount'part", i.e. -5part, -3part ...
@@ -171,8 +171,7 @@
                 <kafka.consumer.zookeeper.url>localhost:2181</kafka.consumer.zookeeper.url>
                 <kafka.consumer.topic>spark-test</kafka.consumer.topic>
                 <kafka.producer.servers>localhost:9092</kafka.producer.servers>
-                <kafka.producer.client.id>my-producer</kafka.producer.client.id>
-                <spark.home>/home/filip/spark-work-dir/spark-bin-hadoop</spark.home>
+                <spark.home>/home/filip/spark-1.6.3-bin-hadoop2.6</spark.home>
                 <spark.master>local[4]</spark.master>
             </properties>
             <build>
@@ -198,7 +197,7 @@
                                 <argument>--deploy-mode</argument><argument>client</argument>
                                 <argument>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.${project.packaging}</argument>
                                 <argument>${spark.testtype}</argument>
-                                <argument>${spark.machines}</argument>
+                                <argument>${spark.machines}</argument> <!-- useless now -->
                             </arguments>
                         </configuration>
                     </plugin>

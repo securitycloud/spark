@@ -90,13 +90,13 @@ public class App {
         Map<String, Integer> topicMap = new HashMap<>(); // consumer topic map
         topicMap.put(kafkaProps.getProperty("consumer.topic"), 1); // topic, numThreads
 
-//        Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
-//        for (String key : kafkaProps.stringPropertyNames()) {
-//            kafkaPropsMap.put(key, kafkaProps.getProperty(key));
-//        }
+        Map<String, String> kafkaPropsMap = new HashMap<>(); // consumer properties
+        for (String key : kafkaProps.stringPropertyNames()) {
+            kafkaPropsMap.put(key, kafkaProps.getProperty(key));
+        }
 
         // reset zookeeper data for group so all messages from topic beginning can be read
-        ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers");
+        ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers/" + kafkaProps.getProperty("group.id"));
 //        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(kafkaStreamsCount);
 //        for (int i = 0; i < kafkaStreamsCount; i++) {
 //            // advanced stream creation with kafka properties as parameter
@@ -106,8 +106,10 @@ public class App {
 
         // INITIALIZE SPARK STREAMING AND PREPARE SHARED VARIABLES IN ALL TESTS
 //        JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
-        JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), kafkaProps.getProperty("group.id"), topicMap);
+        JavaPairReceiverInputDStream<String, String> messages = KafkaUtils.createStream(
+                jssc, String.class, String.class, StringDecoder.class, StringDecoder.class,
+                kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER());
+//                KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), kafkaProps.getProperty("group.id"), topicMap);
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0); // accumulator used for performance monitoring in all tests
         Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
         Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific

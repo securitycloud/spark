@@ -6,7 +6,7 @@ ALL_SERVERS[1]=localhost
 NUMBER_OF_SLAVES=0
 
 # kafka
-KAFKA_INSTALL=/home/filip/kafka_2.11-0.8.2.1
+KAFKA_INSTALL=/home/filip/kafka_2.11-0.10.1.1
 KAFKA_PRODUCER=localhost
 KAFKA_CONSUMER=localhost
 
@@ -26,11 +26,11 @@ LOG="\033[1;34m"
 OFF="\033[0m"
 
 TESTTYPES[1]=ReadWriteTest
-#TESTTYPES[2]=FilterIPTest
-#TESTTYPES[3]=CountTest
-#TESTTYPES[4]=AggregationTest
-#TESTTYPES[5]=TopNTest
-#TESTTYPES[6]=SynScanTest
+TESTTYPES[2]=FilterIPTest
+TESTTYPES[3]=CountTest
+TESTTYPES[4]=AggregationTest
+TESTTYPES[5]=TopNTest
+TESTTYPES[6]=SynScanTest
 
 REPEAT=1
 
@@ -40,8 +40,7 @@ NUM_TESTS=$((NUM_TESTS * ${REPEAT}))
 # current test
 ACT_TEST=1
 
-#export SPARK_HOME="${WRK}/spark-bin-hadoop"
-#export KAFKA_HOME="${KAFKA_INSTALL}"
+export SPARK_HOME="/home/filip/spark-1.6.3-bin-hadoop2.6" # location of your spark folder
 
 #$KAFKA_INSTALL/bin/zookeeper-server-start.sh config/zookeeper.properties #--- DO THIS MANUALLY, start Zookeeper
 #add delete.topic.enable=true to $KAFKA_INSTALL/config/server.properties
@@ -75,14 +74,13 @@ if true;
         cd project
         mvn clean package -P local > /dev/null
         # install spark
-        cd $WRK
-        echo  installing spark on ${ALL_SERVERS[1]}
-        wget -q --show-progress $URL_SPARK -O spark.tgz
-        mkdir spark-bin-hadoop
-        tar -xzvf spark.tgz -C spark-bin-hadoop --strip 1 > /dev/null
-        rm spark.tgz
-
-        echo -e $OK spark downloaded and ready $OFF
+#        cd $WRK
+#        echo  installing spark on ${ALL_SERVERS[1]}
+#        wget -q --show-progress $URL_SPARK -O spark.tgz
+#        mkdir spark-bin-hadoop
+#        tar -xzvf spark.tgz -C spark-bin-hadoop --strip 1 > /dev/null
+#        rm spark.tgz
+        echo -e $OK working dir ready $OFF
 fi
 
 for i in `seq 1 $REPEAT`
@@ -93,18 +91,15 @@ do
         # submit app to spark-submit
         cd ${WRK}
         cd project
-        mvn clean package -P local > /dev/null
-        # screen -S sparktest -d -m mvn exec:exec -Dspark.machines=3 -Dspark.testtype=$TEST -P local
-        mvn exec:exec -Dspark.machines=3 -Dspark.testtype=$TEST -P local
+        screen -S sparktest -d -m mvn exec:exec -Dspark.machines=3 -Dspark.testtype=$TEST -P local
+#       mvn exec:exec -Dspark.machines=3 -Dspark.testtype=$TEST -P local
         echo -e ${OK} Test in progress... spark monitor at http://${ALL_SERVERS[1]}:4040
         # wait for test result message, to know the test has finished
-        $KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
+        $KAFKA_INSTALL/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ${SERVICE_TOPIC} --max-messages 1
         # restart cluster
         echo -e ${OFF} Restarting environment
-        # screen -S sparktest -X quit
-        # kill $(ps aux | grep spark-work-dir | awk '{print $2}')
+#        screen -S sparktest -X quit
+        killall screen
         ACT_TEST=$((ACT_TEST + 1))
     done
 done
-
-#killall java
