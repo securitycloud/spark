@@ -2,9 +2,9 @@ package cz.muni.fi.spark.tests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.commons.Flow;
-import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -18,8 +18,8 @@ public class CountTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final String FILTERED_IP = "62.148.241.49";
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private Accumulator<Integer> processedRecordsCounter;
-    private Accumulator<Integer> filteredIpCount;
+    private LongAccumulator processedRecordsCounter;
+    private LongAccumulator filteredIpCount;
 
     /**
      * Initializes Count test class with passed Accumulators.
@@ -27,7 +27,7 @@ public class CountTest implements VoidFunction<JavaPairRDD<String, String>> {
      * @param processedRecordsCounter Accumulator with total of processed records
      * @param filteredIpCount Accumulator with total of IP addresses matched
      */
-    public CountTest(Accumulator<Integer> processedRecordsCounter, Accumulator<Integer> filteredIpCount) {
+    public CountTest(LongAccumulator processedRecordsCounter, LongAccumulator filteredIpCount) {
         this.processedRecordsCounter = processedRecordsCounter;
         this.filteredIpCount = filteredIpCount;
     }

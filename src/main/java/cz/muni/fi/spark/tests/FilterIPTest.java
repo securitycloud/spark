@@ -3,9 +3,9 @@ package cz.muni.fi.spark.tests;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.commons.Flow;
 import cz.muni.fi.kafka.OutputProducer;
-import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class FilterIPTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private String filterDstIp;
-    private Accumulator<Integer> processedRecordsCounter;
+    private LongAccumulator processedRecordsCounter;
 
     /**
      * Initializes FilterIP test class with passed Accumulator.
@@ -28,7 +28,7 @@ public class FilterIPTest implements VoidFunction<JavaPairRDD<String, String>> {
      * @param processedRecordsCounter Accumulator with total of processed records
      * @param filterDstIp             destination ip that has to match
      */
-    public FilterIPTest(String filterDstIp, Accumulator<Integer> processedRecordsCounter) {
+    public FilterIPTest(String filterDstIp, LongAccumulator processedRecordsCounter) {
         this.filterDstIp = filterDstIp;
         this.processedRecordsCounter = processedRecordsCounter;
     }
