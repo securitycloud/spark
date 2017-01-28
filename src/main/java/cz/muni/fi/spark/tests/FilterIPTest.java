@@ -5,7 +5,6 @@ import cz.muni.fi.commons.Flow;
 import cz.muni.fi.kafka.OutputProducer;
 import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 
@@ -16,7 +15,7 @@ import java.util.Iterator;
  * Access every message read, convert to json and check if IP matches, if yes, then send it to Kafka Output.
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
-public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void> {
+public class FilterIPTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final OutputProducer prod = new OutputProducer();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -45,7 +44,7 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
      * @throws IOException on ObjectMapper error
      */
     @Override
-    public Void call(JavaPairRDD<String, String> rdd) throws IOException {
+    public void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
@@ -61,6 +60,5 @@ public class FilterIPTest implements Function<JavaPairRDD<String, String>, Void>
                 processedRecordsCounter.add(tempCount);
             }
         });
-        return null;
     }
 }

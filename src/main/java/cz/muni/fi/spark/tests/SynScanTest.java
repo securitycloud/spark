@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.fi.commons.Flow;
 import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 
@@ -18,7 +17,7 @@ import java.util.Map;
  * At the end, merges the map with shared accumulator map of all occurrences.
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
-public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> {
+public class SynScanTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private Accumulator<Integer> processedRecordsCounter;
@@ -48,7 +47,7 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
      * @throws IOException on ObjectMapper error
      */
     @Override
-    public Void call(JavaPairRDD<String, String> rdd) throws IOException {
+    public void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
@@ -70,7 +69,6 @@ public class SynScanTest implements Function<JavaPairRDD<String, String>, Void> 
                 processedRecordsCounter.add(tempCount);
             }
         });
-        return null;
     }
 
     /**
