@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 
 /**
@@ -17,7 +17,7 @@ import scala.Tuple2;
  * 
  * @author Martin Jelínek (xjeline5)
  */
-public class BasicStatistics implements Function<JavaPairRDD<String, String>, Void> {
+public class BasicStatistics implements VoidFunction<JavaPairRDD<String, String>> {
     
     private static final ObjectMapper mapper = new ObjectMapper();
     
@@ -30,7 +30,7 @@ public class BasicStatistics implements Function<JavaPairRDD<String, String>, Vo
     }
 
     @Override
-    public Void call(JavaPairRDD<String, String> rdd) throws Exception {
+    public void call(JavaPairRDD<String, String> rdd) throws Exception {
         rdd.foreachPartition((Iterator<Tuple2<String, String>> t) -> {
             int i = 0;
             HashMap<String, LongTriplet> ipMap = new HashMap<>();
@@ -84,8 +84,6 @@ public class BasicStatistics implements Function<JavaPairRDD<String, String>, Vo
             accumulators.getIpCounter().add(filterMap(ipMap, 3));
             accumulators.getIpAggregationCounter().add(filterMap(ipAggrMap, 3));
         });
-        
-        return null;
     }
     
     private static Map<String, LongTriplet> filterMap(Map<String, LongTriplet> map, Integer value) {

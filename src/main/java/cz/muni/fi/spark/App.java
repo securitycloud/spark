@@ -21,7 +21,6 @@ import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
@@ -52,7 +51,7 @@ public class App {
      *
      * @param args first argument needs to be the name of the test class, second the number of machines its run on
      */
-    public static void main(String[] args) throws MissingArgumentException {
+    public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         // VALIDATE AND PARSE COMMAND LINE ARGUMENTS
         if (args.length != 2) {
             throw new IllegalArgumentException("wrong number of arguments, needs to be 2, is: " + args.length);

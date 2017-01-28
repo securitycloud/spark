@@ -18,7 +18,7 @@ import java.util.Map;
  * At the end, merges the map with shared accumulator map of all occurrences.
  * Uses object mapper and flow POJO to convert and store JSON messages.
  */
-public class AggregationTest implements Function<JavaPairRDD<String, String>, Void> {
+public class AggregationTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private Accumulator<Integer> processedRecordsCounter;
@@ -46,7 +46,7 @@ public class AggregationTest implements Function<JavaPairRDD<String, String>, Vo
      * @throws IOException on ObjectMapper error
      */
     @Override
-    public Void call(JavaPairRDD<String, String> rdd) throws IOException {
+    public void call(JavaPairRDD<String, String> rdd) throws IOException {
         rdd.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
             @Override
             public void call(Iterator<Tuple2<String, String>> it) throws IOException {
@@ -66,6 +66,5 @@ public class AggregationTest implements Function<JavaPairRDD<String, String>, Vo
                 processedRecordsCounter.add(tempCount);
             }
         });
-        return null;
     }
 }
