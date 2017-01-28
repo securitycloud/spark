@@ -24,6 +24,7 @@ import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 import java.time.LocalDateTime;
@@ -90,9 +91,9 @@ public class App {
         JavaPairReceiverInputDStream<String, String> messages = KafkaUtils.createStream(
                 jssc, String.class, String.class, StringDecoder.class, StringDecoder.class,
                 kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER());
-        Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0); // accumulator used for performance monitoring in all tests
+        LongAccumulator processedRecordsCounter = jssc.ssc().sparkContext().longAccumulator("processedRecordsCounter");
+        LongAccumulator filteredIpCount = jssc.ssc().sparkContext().longAccumulator("filteredIpCount"); // FilterIPTest specific
         Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
-        Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific
         Accumulator<Map<String, Integer>> ipOccurrences = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator());
         statAccums = new BasicStatisticsAccumulators(jssc);
 
@@ -143,7 +144,7 @@ public class App {
             boolean finished = false;
             int step = 0; // on 10 measurements are printed
             while (!finished) {
-                Integer processedRecords = processedRecordsCounter.value();
+                Long processedRecords = processedRecordsCounter.value();
                 if (processedRecords >= TEST_DATA_RECORDS_SIZE) {
                     final String resultsTopic = applicationProps.getProperty("kafka.producer.resultsTopic");
                     final String testInfo = LocalDateTime.now().format(formatter) + " " + testClass + " [" +

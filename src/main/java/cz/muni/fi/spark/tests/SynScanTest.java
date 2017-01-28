@@ -5,6 +5,7 @@ import cz.muni.fi.commons.Flow;
 import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class SynScanTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private Accumulator<Integer> processedRecordsCounter;
+    private LongAccumulator processedRecordsCounter;
     private Accumulator<Map<String, Integer>> ipOccurrences;
 
     /**
@@ -29,7 +30,7 @@ public class SynScanTest implements VoidFunction<JavaPairRDD<String, String>> {
      * @param processedRecordsCounter Accumulator with total of processed records
      * @param ipOccurrences           Map<String, Integer> Accumulator with all the found IP addresses and their occurrences
      */
-    public SynScanTest(Accumulator<Integer> processedRecordsCounter, Accumulator<Map<String, Integer>> ipOccurrences) {
+    public SynScanTest(LongAccumulator processedRecordsCounter, Accumulator<Map<String, Integer>> ipOccurrences) {
         this.processedRecordsCounter = processedRecordsCounter;
         this.ipOccurrences = ipOccurrences;
     }

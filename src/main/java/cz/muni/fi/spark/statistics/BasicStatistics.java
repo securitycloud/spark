@@ -7,9 +7,9 @@ import cz.muni.fi.spark.accumulators.BasicStatisticsAccumulators;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 /**
@@ -21,10 +21,10 @@ public class BasicStatistics implements VoidFunction<JavaPairRDD<String, String>
     
     private static final ObjectMapper mapper = new ObjectMapper();
     
-    private final Accumulator<Integer> processedRecordsCounter;
+    private final LongAccumulator processedRecordsCounter;
     private final BasicStatisticsAccumulators accumulators;
 
-    public BasicStatistics(Accumulator<Integer> processedRecordsCounter, BasicStatisticsAccumulators accumulators) {
+    public BasicStatistics(LongAccumulator processedRecordsCounter, BasicStatisticsAccumulators accumulators) {
         this.processedRecordsCounter = processedRecordsCounter;
         this.accumulators = accumulators;
     }

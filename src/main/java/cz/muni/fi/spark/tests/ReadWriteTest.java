@@ -1,9 +1,9 @@
 package cz.muni.fi.spark.tests;
 
 import cz.muni.fi.kafka.OutputProducer;
-import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 
 import java.util.Iterator;
@@ -15,14 +15,14 @@ import java.util.Iterator;
 public class ReadWriteTest implements VoidFunction<JavaPairRDD<String, String>> {
     private static final OutputProducer prod = new OutputProducer();
 
-    private Accumulator<Integer> processedRecordsCounter;
+    private LongAccumulator processedRecordsCounter;
 
     /**
      * Initializes ReadWrite test class with passed Accumulator.
      *
      * @param processedRecordsCounter Accumulator with total of processed records
      */
-    public ReadWriteTest(Accumulator<Integer> processedRecordsCounter) {
+    public ReadWriteTest(LongAccumulator processedRecordsCounter) {
         this.processedRecordsCounter = processedRecordsCounter;
     }
 

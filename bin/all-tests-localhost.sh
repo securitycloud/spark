@@ -80,13 +80,16 @@ do
         cd ${WRK}
         cd project
         killall screen
+        kill `ps aux | grep spark | grep -v grep | awk '{print $2}'`
         screen -S sparktest -d -m mvn exec:exec -Dspark.machines=3 -Dspark.testtype=$TEST -P local
         echo -e ${OK} Test in progress... spark monitor at http://${ALL_SERVERS[1]}:4040
         # wait for test result message, to know the test has finished
         $KAFKA_INSTALL/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic ${SERVICE_TOPIC} --max-messages 1
         # restart cluster
         echo -e ${OFF} Restarting environment
-        killall screen
         ACT_TEST=$((ACT_TEST + 1))
     done
 done
+
+killall screen
+kill `ps aux | grep spark | grep -v grep | awk '{print $2}'`
