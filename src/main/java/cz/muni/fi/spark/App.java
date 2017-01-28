@@ -65,18 +65,7 @@ public class App {
         }
         final int machinesCount = 1; // total count of machines including master
         final int kafkaStreamsCount = 1; // number of kafka streams, should be less or equal to the number of kafka partitions
-        /*try {
-            machinesCount = Integer.parseInt(args[1]);
-            if (machinesCount < 3) {
-                throw new IllegalArgumentException("argument with number of machines needs to be greater or equal 3, is: " + args[1]);
-            }
-            kafkaStreamsCount = machinesCount - 2;
-            // Optimization: streamsCount = (machinesCount/2)? check how many executors are working and if the input rate of Kafka gets processed fast enough
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new MissingArgumentException("missing argument: 'machinesCount'");
-        } catch (NumberFormatException numberFormatException) {
-            throw new IllegalArgumentException("argument with number of machines needs to be a number");
-        }*/
+
         System.out.println("Started test: '" + testClass + "' on " + machinesCount + " machines with " + kafkaStreamsCount + " kafka streams.");
 
         // INITIALIZE SPARK CONFIGURATION AND KAFKA PROPERTIES
@@ -96,19 +85,11 @@ public class App {
 
         // reset zookeeper data for group so all messages from topic beginning can be read
         ZkUtils.maybeDeletePath(kafkaProps.getProperty("zookeeper.url"), "/consumers/" + kafkaProps.getProperty("group.id"));
-//        List<JavaPairDStream<String, String>> kafkaStreams = new ArrayList<>(kafkaStreamsCount);
-//        for (int i = 0; i < kafkaStreamsCount; i++) {
-//            // advanced stream creation with kafka properties as parameter
-//            kafkaStreams.add(KafkaUtils.createStream(jssc, String.class, String.class, StringDecoder.class,
-//                    StringDecoder.class, kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER()));
-//        }
 
         // INITIALIZE SPARK STREAMING AND PREPARE SHARED VARIABLES IN ALL TESTS
-//        JavaPairDStream<String, String> messages = jssc.union(kafkaStreams.get(0), kafkaStreams.subList(1, kafkaStreams.size()));
         JavaPairReceiverInputDStream<String, String> messages = KafkaUtils.createStream(
                 jssc, String.class, String.class, StringDecoder.class, StringDecoder.class,
                 kafkaPropsMap, topicMap, StorageLevel.MEMORY_AND_DISK_SER());
-//                KafkaUtils.createStream(jssc, kafkaProps.getProperty("zookeeper.url"), kafkaProps.getProperty("group.id"), topicMap);
         Accumulator<Integer> processedRecordsCounter = jssc.sparkContext().accumulator(0); // accumulator used for performance monitoring in all tests
         Accumulator<Map<String, Integer>> ipPackets = jssc.sparkContext().accumulator(new HashMap<>(), new MapAccumulator()); // Aggregation/TopN/SynScan
         Accumulator<Integer> filteredIpCount = jssc.sparkContext().accumulator(0); // FilterIPTest specific
@@ -235,7 +216,7 @@ public class App {
                     // Updates min and max processed records rate with average that is taken every 5 seconds if test is still running
                     if (processedRecords > 0 && (step % 10) == 0) {
                         Long processingTimeInMillis = ChronoUnit.MILLIS.between(startDateTime, LocalDateTime.now());
-                        if (processingTimeInMillis >= 10000) { // give spark some time to start processing records
+//                        if (processingTimeInMillis >= 10000) { // give spark some time to start processing records
                             Long averageSpeed = (processedRecords / (processingTimeInMillis / 1000));
                             if (min == 0L) {
                                 min = averageSpeed;
@@ -248,7 +229,7 @@ public class App {
                             }
                             System.out.println(String.format("[k flows/s (min/max/avg): %s | %s | %s ] [processed total: %s]",
                                     min/1000, max/1000, averageSpeed/1000, processedRecords));
-                        }
+//                        }
                     }
                     
                     if (testClass.equals("Statistics") && processedRecords > 0 && (step % 2) == 0) {
