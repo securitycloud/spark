@@ -169,10 +169,10 @@
             <id>local</id>
             <properties>
                 <kafka.consumer.zookeeper.url>localhost:2181</kafka.consumer.zookeeper.url>
-                <kafka.consumer.topic>spark-test</kafka.consumer.topic>
+                <kafka.consumer.topic>spark-test</kafka.consumer.topic> <!-- input stream topic -->
                 <kafka.producer.servers>localhost:9092</kafka.producer.servers>
                 <spark.home>/home/filip/spark-2.1.0-bin-hadoop2.7</spark.home>
-                <spark.master>local[4]</spark.master>
+                <spark.master>local[*]</spark.master>
                 <spark.driver.memory>2500mb</spark.driver.memory>
                 <spark.executor.memory>2500mb</spark.executor.memory>
             </properties>
